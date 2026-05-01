@@ -1,0 +1,14 @@
+# Godot 4 編輯器自動生成的快取，不該進版本控制
+.godot/
+*.translation
+*.gd.uid
+
+# Mono 版生成
+.mono/
+mono_crash.*.json
+
+# 系統 / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

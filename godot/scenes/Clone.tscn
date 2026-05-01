@@ -1,0 +1,19 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/Clone.gd" id="1_clone"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_c1"]
+size = Vector2(32, 64)
+
+[node name="Clone" type="CharacterBody2D"]
+collision_layer = 2
+collision_mask = 1
+platform_on_leave = 2
+script = ExtResource("1_clone")
+
+[node name="Visual" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-16, -32, 16, -32, 16, 32, -16, 32)
+color = Color(0.4, 0.7, 1.0, 0.7)
+
+[node name="Collision" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_c1")

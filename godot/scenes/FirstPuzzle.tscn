@@ -1,0 +1,143 @@
+[gd_scene load_steps=14 format=3]
+
+[ext_resource type="Script" path="res://scripts/FirstPuzzle.gd" id="1_main"]
+[ext_resource type="Script" path="res://scripts/PressButton.gd" id="2_btn"]
+[ext_resource type="Script" path="res://scripts/Door.gd" id="3_door"]
+[ext_resource type="Script" path="res://scripts/Exit.gd" id="4_exit"]
+[ext_resource type="Script" path="res://scripts/HintManager.gd" id="5_hint"]
+[ext_resource type="PackedScene" path="res://scenes/Player.tscn" id="6_player"]
+[ext_resource type="PackedScene" path="res://scenes/HUD.tscn" id="7_hud"]
+[ext_resource type="Script" path="res://scripts/CloneSpawner.gd" id="8_spawner"]
+
+[sub_resource type="RectangleShape2D" id="floor_shape"]
+size = Vector2(1200, 40)
+
+[sub_resource type="RectangleShape2D" id="wall_shape"]
+size = Vector2(40, 600)
+
+[sub_resource type="RectangleShape2D" id="button_shape"]
+size = Vector2(60, 30)
+
+[sub_resource type="RectangleShape2D" id="door_shape"]
+size = Vector2(60, 200)
+
+[sub_resource type="RectangleShape2D" id="exit_shape"]
+size = Vector2(80, 100)
+
+[node name="FirstPuzzle" type="Node2D"]
+script = ExtResource("1_main")
+
+[node name="Camera" type="Camera2D" parent="."]
+position = Vector2(640, 360)
+
+[node name="Floor" type="StaticBody2D" parent="."]
+position = Vector2(640, 680)
+
+[node name="Visual" type="Polygon2D" parent="Floor"]
+polygon = PackedVector2Array(-600, -20, 600, -20, 600, 20, -600, 20)
+color = Color(0.4, 0.4, 0.45, 1)
+
+[node name="Collision" type="CollisionShape2D" parent="Floor"]
+shape = SubResource("floor_shape")
+
+[node name="Ceiling" type="StaticBody2D" parent="."]
+position = Vector2(640, 40)
+
+[node name="Visual" type="Polygon2D" parent="Ceiling"]
+polygon = PackedVector2Array(-600, -20, 600, -20, 600, 20, -600, 20)
+color = Color(0.4, 0.4, 0.45, 1)
+
+[node name="Collision" type="CollisionShape2D" parent="Ceiling"]
+shape = SubResource("floor_shape")
+
+[node name="LeftWall" type="StaticBody2D" parent="."]
+position = Vector2(40, 360)
+
+[node name="Visual" type="Polygon2D" parent="LeftWall"]
+polygon = PackedVector2Array(-20, -300, 20, -300, 20, 300, -20, 300)
+color = Color(0.4, 0.4, 0.45, 1)
+
+[node name="Collision" type="CollisionShape2D" parent="LeftWall"]
+shape = SubResource("wall_shape")
+
+[node name="RightWall" type="StaticBody2D" parent="."]
+position = Vector2(1240, 360)
+
+[node name="Visual" type="Polygon2D" parent="RightWall"]
+polygon = PackedVector2Array(-20, -300, 20, -300, 20, 300, -20, 300)
+color = Color(0.4, 0.4, 0.45, 1)
+
+[node name="Collision" type="CollisionShape2D" parent="RightWall"]
+shape = SubResource("wall_shape")
+
+[node name="Button" type="Area2D" parent="."]
+position = Vector2(200, 645)
+collision_layer = 0
+collision_mask = 3
+script = ExtResource("2_btn")
+
+[node name="Visual" type="Polygon2D" parent="Button"]
+polygon = PackedVector2Array(-30, -10, 30, -10, 30, 10, -30, 10)
+color = Color(0.85, 0.6, 0.2, 1)
+
+[node name="Collision" type="CollisionShape2D" parent="Button"]
+shape = SubResource("button_shape")
+
+[node name="Door" type="StaticBody2D" parent="."]
+position = Vector2(700, 460)
+collision_layer = 1
+script = ExtResource("3_door")
+
+[node name="Visual" type="Polygon2D" parent="Door"]
+polygon = PackedVector2Array(-30, 0, 30, 0, 30, 200, -30, 200)
+color = Color(0.6, 0.3, 0.3, 1)
+
+[node name="Collision" type="CollisionShape2D" parent="Door"]
+position = Vector2(0, 100)
+shape = SubResource("door_shape")
+
+[node name="Exit" type="Area2D" parent="."]
+position = Vector2(1100, 620)
+collision_layer = 0
+collision_mask = 3
+script = ExtResource("4_exit")
+
+[node name="Visual" type="Polygon2D" parent="Exit"]
+polygon = PackedVector2Array(-40, -50, 40, -50, 40, 50, -40, 50)
+color = Color(0.3, 0.7, 0.4, 0.5)
+
+[node name="Collision" type="CollisionShape2D" parent="Exit"]
+shape = SubResource("exit_shape")
+
+[node name="Player" parent="." instance=ExtResource("6_player")]
+position = Vector2(550, 628)
+
+[node name="HUD" parent="." instance=ExtResource("7_hud")]
+
+[node name="CloneSpawner" type="Node" parent="."]
+script = ExtResource("8_spawner")
+
+[node name="HintManager" type="CanvasLayer" parent="."]
+script = ExtResource("5_hint")
+
+[node name="HintRecord" type="Label" parent="HintManager"]
+anchor_left = 1.0
+anchor_top = 0.0
+anchor_right = 1.0
+offset_left = -260.0
+offset_top = 60.0
+offset_right = -20.0
+offset_bottom = 90.0
+text = "按 R 開始錄製"
+horizontal_alignment = 2
+
+[node name="HintDestruct" type="Label" parent="HintManager"]
+anchor_left = 1.0
+anchor_top = 0.0
+anchor_right = 1.0
+offset_left = -260.0
+offset_top = 100.0
+offset_right = -20.0
+offset_bottom = 130.0
+text = "按 X 自爆"
+horizontal_alignment = 2
