@@ -7,7 +7,7 @@ class_name Door
 
 const OPEN_TIME := 2.0   # 完全開啟需要 2 秒
 const CLOSE_TIME := 2.0  # 完全關閉需要 2 秒
-const PASS_THROUGH_THRESHOLD := 0.30  # 開到這個比例以上才允許穿過
+const PASS_THROUGH_THRESHOLD := 0.50  # 開到這個比例以上才允許穿過
 
 # 可調門高（每個 Door 實例 inspector 設定）。需與 Polygon2D 高度、Collision shape size.y 一致
 @export var door_height: float = 200.0
@@ -21,6 +21,9 @@ var should_open := false
 
 # 由按鈕的 pressed_changed signal 呼叫
 func set_target(open: bool) -> void:
+	# 播 SFX 只在「關 → 開」轉換、避免 AND-gate 多次連發
+	if open and not should_open:
+		AudioManager.play_sfx("door_open")
 	should_open = open
 
 

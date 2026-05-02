@@ -11,6 +11,8 @@
 [ext_resource type="Script" uid="uid://s71scpjk1yp2" path="res://scripts/PressButton.gd" id="9_btn"]
 [ext_resource type="Script" uid="uid://b5ss3aoo8h5go" path="res://scripts/Exit.gd" id="10_exit"]
 [ext_resource type="Script" uid="uid://bhheffd4nrd7o" path="res://scripts/Hazard.gd" id="11_hazard"]
+[ext_resource type="Script" uid="uid://c1j122n65b364" path="res://scripts/PressCounter.gd" id="12_counter"]
+[ext_resource type="AudioStream" uid="uid://bhdttxc2rbi6q" path="res://audio/bgm/title.mp3" id="13_world_bgm"]
 
 [sub_resource type="RectangleShape2D" id="floor_left300"]
 size = Vector2(439.5, 40)
@@ -62,6 +64,10 @@ position = Vector2(150, 628)
 [node name="CloneSpawner" type="Node" parent="." unique_id=1269398569]
 script = ExtResource("4_spawner")
 
+[node name="BGMPlayer" type="AudioStreamPlayer" parent="." unique_id=1886830418]
+stream = ExtResource("13_world_bgm")
+autoplay = true
+
 [node name="Room1" parent="." unique_id=72858191 instance=ExtResource("5_room")]
 
 [node name="Floor" type="StaticBody2D" parent="Room1" unique_id=1321387738]
@@ -98,7 +104,7 @@ polygon = PackedVector2Array(-20, -300, 20, -300, 20, 300, -20, 300)
 shape = SubResource("wall_shape")
 
 [node name="P1" type="StaticBody2D" parent="Room1" unique_id=1577066675]
-position = Vector2(500, 600)
+position = Vector2(541, 601)
 
 [node name="Visual" type="Polygon2D" parent="Room1/P1" unique_id=453747790]
 color = Color(0.45, 0.45, 0.5, 1)
@@ -108,7 +114,7 @@ polygon = PackedVector2Array(-100, -15, 100, -15, 100, 15, -100, 15)
 shape = SubResource("plat_short")
 
 [node name="P2" type="StaticBody2D" parent="Room1" unique_id=1984713276]
-position = Vector2(300, 520)
+position = Vector2(333, 523)
 
 [node name="Visual" type="Polygon2D" parent="Room1/P2" unique_id=85237144]
 position = Vector2(-57, -5)
@@ -120,7 +126,7 @@ position = Vector2(-55, -5)
 shape = SubResource("plat_short")
 
 [node name="P3" type="StaticBody2D" parent="Room1" unique_id=1591817872]
-position = Vector2(500, 440)
+position = Vector2(461, 436)
 
 [node name="Visual" type="Polygon2D" parent="Room1/P3" unique_id=1278694155]
 position = Vector2(-336, -11)
@@ -132,7 +138,7 @@ position = Vector2(-334.5, -11)
 shape = SubResource("plat_short")
 
 [node name="P4" type="StaticBody2D" parent="Room1" unique_id=272836058]
-position = Vector2(300, 360)
+position = Vector2(257, 334)
 
 [node name="Visual" type="Polygon2D" parent="Room1/P4" unique_id=1697649123]
 position = Vector2(160, 7)
@@ -156,7 +162,7 @@ position = Vector2(158, 1)
 shape = SubResource("plat_short")
 
 [node name="P6Top" type="StaticBody2D" parent="Room1" unique_id=1716614051]
-position = Vector2(1000, 200)
+position = Vector2(1045, 341)
 
 [node name="Visual" type="Polygon2D" parent="Room1/P6Top" unique_id=763789877]
 color = Color(0.5, 0.5, 0.55, 1)
@@ -169,10 +175,10 @@ shape = SubResource("plat_top_exit")
 position = Vector2(120, 624)
 
 [node name="Room2" parent="." unique_id=89602540 instance=ExtResource("5_room")]
-position = Vector2(1280, 0)
+position = Vector2(1280, -1)
 
 [node name="EntryPlat" type="StaticBody2D" parent="Room2" unique_id=1226248902]
-position = Vector2(140, 200)
+position = Vector2(141, 342)
 
 [node name="Visual" type="Polygon2D" parent="Room2/EntryPlat" unique_id=1444138907]
 color = Color(0.5, 0.5, 0.55, 1)
@@ -182,7 +188,7 @@ polygon = PackedVector2Array(-140, -15, 140, -15, 140, 15, -140, 15)
 shape = SubResource("plat_entry")
 
 [node name="Step1" type="StaticBody2D" parent="Room2" unique_id=1886497655]
-position = Vector2(450, 320)
+position = Vector2(386, 404)
 
 [node name="Visual" type="Polygon2D" parent="Room2/Step1" unique_id=417809348]
 color = Color(0.45, 0.45, 0.5, 1)
@@ -192,7 +198,7 @@ polygon = PackedVector2Array(-100, -15, 100, -15, 100, 15, -100, 15)
 shape = SubResource("plat_short")
 
 [node name="Step2" type="StaticBody2D" parent="Room2" unique_id=841817259]
-position = Vector2(700, 440)
+position = Vector2(593, 492)
 
 [node name="Visual" type="Polygon2D" parent="Room2/Step2" unique_id=976276365]
 color = Color(0.45, 0.45, 0.5, 1)
@@ -202,7 +208,7 @@ polygon = PackedVector2Array(-100, -15, 100, -15, 100, 15, -100, 15)
 shape = SubResource("plat_short")
 
 [node name="Step3" type="StaticBody2D" parent="Room2" unique_id=1056641023]
-position = Vector2(900, 560)
+position = Vector2(799, 573)
 
 [node name="Visual" type="Polygon2D" parent="Room2/Step3" unique_id=1093012932]
 color = Color(0.45, 0.45, 0.5, 1)
@@ -232,10 +238,10 @@ polygon = PackedVector2Array(-640, -20, 640, -20, 640, 20, -640, 20)
 shape = SubResource("floor_full")
 
 [node name="Checkpoint" parent="Room2" unique_id=786997342 instance=ExtResource("6_cp")]
-position = Vector2(114, 151)
+position = Vector2(95, 291)
 
 [node name="Sign" parent="Room2" unique_id=1715098787 instance=ExtResource("7_sign")]
-position = Vector2(1076, 581)
+position = Vector2(975, 506)
 text = "踩按鈕開門 → 把握時機跳過矮門"
 
 [node name="Button" type="Area2D" parent="Room2" unique_id=1276590303]
@@ -293,7 +299,7 @@ position = Vector2(80, 624)
 
 [node name="Sign" parent="Room3" unique_id=192230883 instance=ExtResource("7_sign")]
 position = Vector2(842, 607)
-text = "錄走到按鈕站著 → 結束 → 按 1 召喚分身"
+text = "按R走到按鈕站著 → 按R結束 → 按 1 召喚"
 
 [node name="Button" type="Area2D" parent="Room3" unique_id=1800703467]
 position = Vector2(220, 645)
@@ -343,16 +349,6 @@ polygon = PackedVector2Array(-640, -20, 640, -20, 640, 20, -640, 20)
 
 [node name="Collision" type="CollisionShape2D" parent="Room4/Ceiling" unique_id=1327532250]
 shape = SubResource("floor_full")
-
-[node name="RightWall" type="StaticBody2D" parent="Room4" unique_id=310535103]
-position = Vector2(1260, 360)
-
-[node name="Visual" type="Polygon2D" parent="Room4/RightWall" unique_id=424624157]
-color = Color(0.4, 0.4, 0.45, 1)
-polygon = PackedVector2Array(-20, -300, 20, -300, 20, 300, -20, 300)
-
-[node name="Collision" type="CollisionShape2D" parent="Room4/RightWall" unique_id=951786935]
-shape = SubResource("wall_shape")
 
 [node name="Checkpoint" parent="Room4" unique_id=52608217 instance=ExtResource("6_cp")]
 position = Vector2(80, 624)
@@ -479,18 +475,124 @@ polygon = PackedVector2Array(-30, 0, 30, 0, 30, 200, -30, 200)
 position = Vector2(0, 100)
 shape = SubResource("door_full_200")
 
-[node name="Exit" type="Area2D" parent="Room4" unique_id=1589853337]
-position = Vector2(1190, 601)
+[node name="r4 Wall" type="StaticBody2D" parent="Room4" unique_id=1415198196]
+position = Vector2(1258, 254)
+scale = Vector2(1, 0.68)
+
+[node name="Visual" type="Polygon2D" parent="Room4/r4 Wall" unique_id=1793348090]
+color = Color(0.4, 0.4, 0.45, 1)
+polygon = PackedVector2Array(-20, -300, 20, -300, 20, 300, -20, 300)
+
+[node name="Collision" type="CollisionShape2D" parent="Room4/r4 Wall" unique_id=2077566836]
+shape = SubResource("wall_shape")
+
+[node name="Room6" parent="." unique_id=1828888202 instance=ExtResource("5_room")]
+position = Vector2(5120, 0)
+
+[node name="Floor" type="StaticBody2D" parent="Room6" unique_id=1206140129]
+position = Vector2(640, 680)
+
+[node name="Visual" type="Polygon2D" parent="Room6/Floor" unique_id=85565474]
+color = Color(0.4, 0.4, 0.45, 1)
+polygon = PackedVector2Array(-640, -20, 640, -20, 640, 20, -640, 20)
+
+[node name="Collision" type="CollisionShape2D" parent="Room6/Floor" unique_id=70330669]
+shape = SubResource("floor_full")
+
+[node name="Ceiling" type="StaticBody2D" parent="Room6" unique_id=871033783]
+position = Vector2(640, 40)
+
+[node name="Visual" type="Polygon2D" parent="Room6/Ceiling" unique_id=991948731]
+color = Color(0.4, 0.4, 0.45, 1)
+polygon = PackedVector2Array(-640, -20, 640, -20, 640, 20, -640, 20)
+
+[node name="Collision" type="CollisionShape2D" parent="Room6/Ceiling" unique_id=500194604]
+shape = SubResource("floor_full")
+
+[node name="RightWall" type="StaticBody2D" parent="Room6" unique_id=118289517]
+position = Vector2(1260, 360)
+
+[node name="Visual" type="Polygon2D" parent="Room6/RightWall" unique_id=998023192]
+color = Color(0.4, 0.4, 0.45, 1)
+polygon = PackedVector2Array(-20, -300, 20, -300, 20, 300, -20, 300)
+
+[node name="Collision" type="CollisionShape2D" parent="Room6/RightWall" unique_id=734610790]
+shape = SubResource("wall_shape")
+
+[node name="Checkpoint" parent="Room6" unique_id=1361260254 instance=ExtResource("6_cp")]
+position = Vector2(120, 624)
+
+[node name="Sign" parent="Room6" unique_id=1217686342 instance=ExtResource("7_sign")]
+position = Vector2(541, 600)
+text = "踩按鈕 50 次開門！"
+
+[node name="Button1" type="Area2D" parent="Room6" unique_id=2007896585]
+position = Vector2(380, 645)
+collision_layer = 0
+collision_mask = 3
+script = ExtResource("9_btn")
+
+[node name="Visual" type="Polygon2D" parent="Room6/Button1" unique_id=448550932]
+color = Color(0.85, 0.6, 0.2, 1)
+polygon = PackedVector2Array(-30, -10, 30, -10, 30, 10, -30, 10)
+
+[node name="Collision" type="CollisionShape2D" parent="Room6/Button1" unique_id=1996824934]
+shape = SubResource("button_shape")
+
+[node name="Button2" type="Area2D" parent="Room6" unique_id=1727385566]
+position = Vector2(700, 645)
+collision_layer = 0
+collision_mask = 3
+script = ExtResource("9_btn")
+
+[node name="Visual" type="Polygon2D" parent="Room6/Button2" unique_id=1989372959]
+color = Color(0.85, 0.6, 0.2, 1)
+polygon = PackedVector2Array(-30, -10, 30, -10, 30, 10, -30, 10)
+
+[node name="Collision" type="CollisionShape2D" parent="Room6/Button2" unique_id=1323254662]
+shape = SubResource("button_shape")
+
+[node name="CounterLabel" type="Label" parent="Room6" unique_id=829178133]
+offset_left = 440.0
+offset_top = 100.0
+offset_right = 840.0
+offset_bottom = 160.0
+theme_override_font_sizes/font_size = 36
+text = "0 / 50"
+horizontal_alignment = 1
+
+[node name="Door" type="StaticBody2D" parent="Room6" unique_id=2126643937]
+position = Vector2(1000, 460)
+script = ExtResource("8_door")
+
+[node name="Visual" type="Polygon2D" parent="Room6/Door" unique_id=612236004]
+color = Color(0.6, 0.3, 0.3, 1)
+polygon = PackedVector2Array(-30, 0, 30, 0, 30, 200, -30, 200)
+
+[node name="Collision" type="CollisionShape2D" parent="Room6/Door" unique_id=47309229]
+position = Vector2(0, 100)
+shape = SubResource("door_full_200")
+
+[node name="Exit" type="Area2D" parent="Room6" unique_id=14200549]
+position = Vector2(1180, 620)
 collision_layer = 0
 collision_mask = 3
 script = ExtResource("10_exit")
 
-[node name="Visual" type="Polygon2D" parent="Room4/Exit" unique_id=2061526719]
+[node name="Visual" type="Polygon2D" parent="Room6/Exit" unique_id=199811962]
 color = Color(0.3, 0.7, 0.4, 0.5)
 polygon = PackedVector2Array(-40, -50, 40, -50, 40, 50, -40, 50)
 
-[node name="Collision" type="CollisionShape2D" parent="Room4/Exit" unique_id=433799211]
+[node name="Collision" type="CollisionShape2D" parent="Room6/Exit" unique_id=748465934]
 shape = SubResource("exit_shape")
+
+[node name="PressCounter" type="Node" parent="Room6" unique_id=1465428740]
+script = ExtResource("12_counter")
+target_count = 50
+door_path = NodePath("../Door")
+label_path = NodePath("../CounterLabel")
+track_all_buttons = true
+reset_on_checkpoint = true
 
 [node name="DeathBand" type="Area2D" parent="." unique_id=672218696]
 position = Vector2(2560, 850)

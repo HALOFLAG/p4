@@ -9,6 +9,19 @@ class_name Room
 
 @onready var bounds: Area2D = $Bounds
 @onready var camera_target: Marker2D = $CameraTarget
+@onready var _bounds_shape: CollisionShape2D = $Bounds/CollisionShape2D
+
+
+# 給 PlayerController 用：判斷世界座標點是否在本房間範圍內
+# （proxy 跨房時自動結束錄製需要這個 API）
+func contains(world_pos: Vector2) -> bool:
+	if _bounds_shape == null or _bounds_shape.shape == null:
+		return false
+	var rect := _bounds_shape.shape as RectangleShape2D
+	if rect == null:
+		return false
+	var local := bounds.to_local(world_pos)
+	return absf(local.x) <= rect.size.x * 0.5 and absf(local.y) <= rect.size.y * 0.5
 
 
 func _ready() -> void:

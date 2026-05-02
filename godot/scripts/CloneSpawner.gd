@@ -50,4 +50,6 @@ func spawn_clone(slot_index: int) -> void:
 	# 加到 spawner 的父節點（通常是場景根），與其他場景物件同層
 	get_parent().add_child(clone)
 	summon_cd_remaining = SUMMON_CD
+	GameStats.clone_summon_count += 1
+	AudioManager.play_sfx("summon")
 	print("[SPAWN] 召喚 ", rec.label, " @ ", rec.spawn_position, " — ", rec.input_frames.size(), " frames")

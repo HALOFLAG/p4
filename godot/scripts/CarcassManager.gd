@@ -44,6 +44,7 @@ func register_death(slot_index: int, world_position: Vector2, parent: Node) -> v
 	carcass.setup(slot_index)
 	parent.add_child(carcass)
 	_slot_carcasses[slot_index] = carcass
+	GameStats.carcass_spawn_count += 1
 	print("[CARCASS] 槽位 %d 殘骸生成 @ %s" % [slot_index + 1, world_position])
 
 

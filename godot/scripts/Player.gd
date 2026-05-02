@@ -167,6 +167,7 @@ func _apply_movement(delta: float) -> void:
 		velocity.y = JUMP_VELOCITY
 		jump_buffer_timer = 0.0
 		coyote_timer = 0.0
+		AudioManager.play_sfx("jump")
 
 	# --- 6. 變高跳：跳到一半放開，把上升速度截斷 ---
 	# just_released = 這 tick 沒按住 && 上 tick 按住
@@ -224,6 +225,8 @@ func die() -> void:
 	is_dead = true
 	velocity = Vector2.ZERO
 	is_frozen = true  # 借用 freeze 的 _physics_process 早退
+	GameStats.death_count += 1
+	AudioManager.play_sfx("die")
 	died.emit()
 
 

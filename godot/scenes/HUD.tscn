@@ -7,9 +7,9 @@ script = ExtResource("1_hud")
 
 [node name="InfoBox" type="VBoxContainer" parent="." unique_id=685960715]
 offset_left = 20.0
-offset_top = 70.0
+offset_top = 41.0
 offset_right = 1200.0
-offset_bottom = 270.0
+offset_bottom = 241.0
 mouse_filter = 2
 
 [node name="RecLabel" type="Label" parent="InfoBox" unique_id=56154899]
@@ -24,10 +24,10 @@ anchors_preset = 12
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 9.0
-offset_top = -60.0
-offset_right = -31.0
-offset_bottom = -30.0
+offset_left = 489.0
+offset_top = -680.0
+offset_right = -4.5062256
+offset_bottom = -650.0
 grow_horizontal = 2
 grow_vertical = 0
 scale = Vector2(0.9968293, 1)
@@ -46,3 +46,15 @@ offset_top = -160.0
 offset_right = 300.0
 offset_bottom = -120.0
 horizontal_alignment = 1
+
+[node name="PauseButton" type="Button" parent="." unique_id=252810294]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -64.0
+offset_top = 44.0
+offset_right = -15.0
+offset_bottom = 91.0
+grow_horizontal = 0
+theme_override_font_sizes/font_size = 28
+text = "‖"

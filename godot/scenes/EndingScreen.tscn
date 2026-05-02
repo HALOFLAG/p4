@@ -1,0 +1,154 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/EndingScreen.gd" id="1_ending"]
+[ext_resource type="AudioStream" path="res://audio/bgm/world.mp3" id="2_ending_bgm"]
+
+[sub_resource type="StyleBoxFlat" id="frame_style"]
+bg_color = Color(0, 0, 0, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(1, 1, 1, 1)
+
+[node name="EndingScreen" type="CanvasLayer"]
+layer = 300
+script = ExtResource("1_ending")
+
+[node name="BGMPlayer" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("2_ending_bgm")
+autoplay = true
+bus = "Music"
+
+[node name="Background" type="ColorRect" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 0
+color = Color(0, 0, 0, 1)
+
+[node name="Frame" type="Panel" parent="."]
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -360.0
+offset_top = -300.0
+offset_right = 360.0
+offset_bottom = 300.0
+mouse_filter = 0
+theme_override_styles/panel = SubResource("frame_style")
+
+[node name="Margin" type="MarginContainer" parent="Frame"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+theme_override_constants/margin_left = 40
+theme_override_constants/margin_top = 40
+theme_override_constants/margin_right = 40
+theme_override_constants/margin_bottom = 40
+
+[node name="VBox" type="VBoxContainer" parent="Frame/Margin"]
+mouse_filter = 2
+theme_override_constants/separation = 14
+
+[node name="TitleLabel" type="Label" parent="Frame/Margin/VBox"]
+theme_override_font_sizes/font_size = 56
+text = "通關"
+horizontal_alignment = 1
+
+[node name="Spacer1" type="Control" parent="Frame/Margin/VBox"]
+custom_minimum_size = Vector2(0, 16)
+mouse_filter = 2
+
+[node name="StatsGrid" type="GridContainer" parent="Frame/Margin/VBox"]
+mouse_filter = 2
+theme_override_constants/h_separation = 30
+theme_override_constants/v_separation = 8
+columns = 2
+
+[node name="I_Btn" type="Label" parent="Frame/Margin/VBox/StatsGrid"]
+theme_override_font_sizes/font_size = 24
+text = "按按鈕："
+horizontal_alignment = 2
+size_flags_horizontal = 3
+
+[node name="V_Btn" type="Label" parent="Frame/Margin/VBox/StatsGrid"]
+theme_override_font_sizes/font_size = 24
+text = "0 次"
+size_flags_horizontal = 3
+
+[node name="I_Summon" type="Label" parent="Frame/Margin/VBox/StatsGrid"]
+theme_override_font_sizes/font_size = 24
+text = "召喚分身："
+horizontal_alignment = 2
+size_flags_horizontal = 3
+
+[node name="V_Summon" type="Label" parent="Frame/Margin/VBox/StatsGrid"]
+theme_override_font_sizes/font_size = 24
+text = "0 次"
+size_flags_horizontal = 3
+
+[node name="I_Recorded" type="Label" parent="Frame/Margin/VBox/StatsGrid"]
+theme_override_font_sizes/font_size = 24
+text = "完成錄製："
+horizontal_alignment = 2
+size_flags_horizontal = 3
+
+[node name="V_Recorded" type="Label" parent="Frame/Margin/VBox/StatsGrid"]
+theme_override_font_sizes/font_size = 24
+text = "0 次"
+size_flags_horizontal = 3
+
+[node name="I_Carcass" type="Label" parent="Frame/Margin/VBox/StatsGrid"]
+theme_override_font_sizes/font_size = 24
+text = "物理殘骸："
+horizontal_alignment = 2
+size_flags_horizontal = 3
+
+[node name="V_Carcass" type="Label" parent="Frame/Margin/VBox/StatsGrid"]
+theme_override_font_sizes/font_size = 24
+text = "0 個"
+size_flags_horizontal = 3
+
+[node name="I_Death" type="Label" parent="Frame/Margin/VBox/StatsGrid"]
+theme_override_font_sizes/font_size = 24
+text = "死亡："
+horizontal_alignment = 2
+size_flags_horizontal = 3
+
+[node name="V_Death" type="Label" parent="Frame/Margin/VBox/StatsGrid"]
+theme_override_font_sizes/font_size = 24
+text = "0 次"
+size_flags_horizontal = 3
+
+[node name="I_Time" type="Label" parent="Frame/Margin/VBox/StatsGrid"]
+theme_override_font_sizes/font_size = 24
+text = "時長："
+horizontal_alignment = 2
+size_flags_horizontal = 3
+
+[node name="V_Time" type="Label" parent="Frame/Margin/VBox/StatsGrid"]
+theme_override_font_sizes/font_size = 24
+text = "0:00"
+size_flags_horizontal = 3
+
+[node name="Spacer2" type="Control" parent="Frame/Margin/VBox"]
+custom_minimum_size = Vector2(0, 24)
+mouse_filter = 2
+
+[node name="VariantLabel" type="Label" parent="Frame/Margin/VBox"]
+modulate = Color(1, 0.92, 0.7, 1)
+theme_override_font_sizes/font_size = 22
+text = ""
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="Spacer3" type="Control" parent="Frame/Margin/VBox"]
+custom_minimum_size = Vector2(0, 30)
+mouse_filter = 2
+
+[node name="HintLabel" type="Label" parent="Frame/Margin/VBox"]
+modulate = Color(0.6, 0.6, 0.6, 1)
+theme_override_font_sizes/font_size = 16
+text = "按 R 重新開始 · 按 ESC 退出"
+horizontal_alignment = 1

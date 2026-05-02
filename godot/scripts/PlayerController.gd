@@ -40,6 +40,8 @@ var _scene_root: Node = null
 # M9：本體死亡的 zone 追蹤
 # 玩家當前所在的 zone 列表（可重疊）；最後加入的視為「當前 zone」
 var _current_zones: Array = []
+# M10：錄製啟動時所在的房間，proxy 離開該房間即自動結束錄製
+var _recording_start_room: Node = null
 # 黑屏覆蓋層（重生流程）
 var _death_canvas: CanvasLayer
 var _death_rect: ColorRect
@@ -117,6 +119,13 @@ func _physics_process(_delta: float) -> void:
 		end_recording()
 		return
 
+	# Proxy 離開錄製起始房間 → 自動結束（當作完成錄製，走標準 end_recording）
+	if _recording_start_room != null and is_instance_valid(_recording_start_room):
+		if not _recording_start_room.contains(current_proxy.global_position):
+			print("[CTRL] Proxy 離開錄製起始房間，自動結束")
+			end_recording()
+			return
+
 	var dist: float = current_player.position.distance_to(current_proxy.position)
 	var now_overlap := dist < OVERLAP_THRESHOLD
 	if now_overlap and not _proxy_overlapping_body:
@@ -165,6 +174,12 @@ func start_recording(player, target_slot: int = -1) -> void:
 	current_player = player
 	_scene_root = player.get_parent()
 	_target_slot = target_slot
+	# M10：記下錄製啟動時所在房間，proxy 離開即自動結束
+	_recording_start_room = RoomManager.current_room
+
+	# 提前 emit recording_started：讓 BGM ducking 等訂閱者**先**降音量、
+	# 之後再發 record_start SFX 與儀式音、避免被 BGM 蓋掉
+	recording_started.emit()
 
 	# 1. 凍結本體 + 所有 active Clone（M7）
 	player.freeze()
@@ -195,13 +210,13 @@ func start_recording(player, target_slot: int = -1) -> void:
 	RecordingManager.start_recording(proxy.position)
 
 	# 4. 播放儀式（重錄不分裂、新錄製分裂）
+	AudioManager.play_sfx("record_start")
 	RitualPlayer.play_recording_start_ritual(player, proxy, animate_split)
 
 	if target_slot >= 0:
 		print("[CTRL] Re-recording slot %d @ %s" % [target_slot + 1, proxy.position])
 	else:
 		print("[CTRL] Recording started @ ", player.position)
-	recording_started.emit()
 
 
 # 由 RecordingProxy._handle_special_actions 呼叫
@@ -209,6 +224,7 @@ func end_recording() -> void:
 	if state != State.RECORDING:
 		return
 	state = State.NORMAL
+	AudioManager.play_sfx("record_end")
 
 	# 依 _target_slot 決定走 FIFO 流程還是 replace_slot 流程
 	var rec: Recording
@@ -217,6 +233,8 @@ func end_recording() -> void:
 	else:
 		rec = RecordingManager.stop_recording()
 	_target_slot = -1
+	if rec != null:
+		GameStats.recording_completed_count += 1
 
 	if current_proxy:
 		current_proxy.set_physics_process(false)
@@ -235,6 +253,7 @@ func end_recording() -> void:
 		p.unfreeze()
 	# M7：解凍所有 active Clone
 	_unfreeze_all_clones()
+	_recording_start_room = null
 
 	print("[CTRL] Recording ended (rec saved: ", rec != null, ")")
 	recording_ended.emit()
@@ -317,6 +336,8 @@ func handle_recording_proxy_death(death_position: Vector2) -> void:
 	else:
 		rec = RecordingManager.stop_recording()
 	_target_slot = -1
+	if rec != null:
+		GameStats.recording_completed_count += 1
 
 	if current_proxy:
 		current_proxy.set_physics_process(false)
@@ -368,6 +389,7 @@ func _abort_recording() -> void:
 	# 單獨收掉 RitualPlayer 的紅框
 	RitualPlayer.fade_out_recording_frame()
 	_unfreeze_all_clones()
+	_recording_start_room = null
 
 	recording_ended.emit()
 

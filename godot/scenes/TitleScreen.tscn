@@ -1,0 +1,181 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/TitleScreen.gd" id="1_title"]
+[ext_resource type="AudioStream" path="res://audio/bgm/world.mp3" id="2_title_bgm"]
+
+[sub_resource type="StyleBoxFlat" id="settings_frame"]
+bg_color = Color(0, 0, 0, 0.95)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(1, 1, 1, 1)
+
+[node name="TitleScreen" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 0
+script = ExtResource("1_title")
+
+[node name="Background" type="ColorRect" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+color = Color(0.05, 0.06, 0.1, 1)
+
+[node name="BGMPlayer" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("2_title_bgm")
+autoplay = true
+
+;
+; ===================== 主選單 =====================
+;
+
+[node name="MainPanel" type="Control" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="VBox" type="VBoxContainer" parent="MainPanel"]
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -180.0
+offset_right = 200.0
+offset_bottom = 180.0
+mouse_filter = 2
+theme_override_constants/separation = 24
+alignment = 1
+
+[node name="Title" type="Label" parent="MainPanel/VBox"]
+theme_override_font_sizes/font_size = 72
+text = "haloflag P4"
+horizontal_alignment = 1
+
+[node name="Subtitle" type="Label" parent="MainPanel/VBox"]
+modulate = Color(0.6, 0.6, 0.7, 1)
+theme_override_font_sizes/font_size = 18
+text = "原型 demo"
+horizontal_alignment = 1
+
+[node name="Spacer" type="Control" parent="MainPanel/VBox"]
+custom_minimum_size = Vector2(0, 40)
+mouse_filter = 2
+
+[node name="StartButton" type="Button" parent="MainPanel/VBox"]
+custom_minimum_size = Vector2(220, 48)
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 24
+text = "開始遊戲"
+
+[node name="SettingsButton" type="Button" parent="MainPanel/VBox"]
+custom_minimum_size = Vector2(220, 48)
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 24
+text = "設定"
+
+[node name="QuitButton" type="Button" parent="MainPanel/VBox"]
+custom_minimum_size = Vector2(220, 48)
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 24
+text = "離開"
+
+;
+; ===================== 設定面板 =====================
+;
+
+[node name="SettingsPanel" type="Control" parent="."]
+visible = false
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="Frame" type="Panel" parent="SettingsPanel"]
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -240.0
+offset_top = -180.0
+offset_right = 240.0
+offset_bottom = 180.0
+mouse_filter = 0
+theme_override_styles/panel = SubResource("settings_frame")
+
+[node name="Margin" type="MarginContainer" parent="SettingsPanel/Frame"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+theme_override_constants/margin_left = 30
+theme_override_constants/margin_top = 30
+theme_override_constants/margin_right = 30
+theme_override_constants/margin_bottom = 30
+
+[node name="VBox" type="VBoxContainer" parent="SettingsPanel/Frame/Margin"]
+mouse_filter = 2
+theme_override_constants/separation = 18
+
+[node name="Title" type="Label" parent="SettingsPanel/Frame/Margin/VBox"]
+theme_override_font_sizes/font_size = 32
+text = "設定"
+horizontal_alignment = 1
+
+[node name="Spacer1" type="Control" parent="SettingsPanel/Frame/Margin/VBox"]
+custom_minimum_size = Vector2(0, 12)
+mouse_filter = 2
+
+[node name="MusicRow" type="HBoxContainer" parent="SettingsPanel/Frame/Margin/VBox"]
+mouse_filter = 2
+theme_override_constants/separation = 12
+
+[node name="MusicLabel" type="Label" parent="SettingsPanel/Frame/Margin/VBox/MusicRow"]
+custom_minimum_size = Vector2(80, 0)
+theme_override_font_sizes/font_size = 20
+text = "音樂"
+
+[node name="MusicSlider" type="HSlider" parent="SettingsPanel/Frame/Margin/VBox/MusicRow"]
+custom_minimum_size = Vector2(220, 30)
+size_flags_horizontal = 3
+max_value = 1.0
+step = 0.01
+value = 0.7
+
+[node name="MusicValue" type="Label" parent="SettingsPanel/Frame/Margin/VBox/MusicRow"]
+custom_minimum_size = Vector2(60, 0)
+theme_override_font_sizes/font_size = 20
+text = "70%"
+horizontal_alignment = 2
+
+[node name="SFXRow" type="HBoxContainer" parent="SettingsPanel/Frame/Margin/VBox"]
+mouse_filter = 2
+theme_override_constants/separation = 12
+
+[node name="SFXLabel" type="Label" parent="SettingsPanel/Frame/Margin/VBox/SFXRow"]
+custom_minimum_size = Vector2(80, 0)
+theme_override_font_sizes/font_size = 20
+text = "音效"
+
+[node name="SFXSlider" type="HSlider" parent="SettingsPanel/Frame/Margin/VBox/SFXRow"]
+custom_minimum_size = Vector2(220, 30)
+size_flags_horizontal = 3
+max_value = 1.0
+step = 0.01
+value = 0.7
+
+[node name="SFXValue" type="Label" parent="SettingsPanel/Frame/Margin/VBox/SFXRow"]
+custom_minimum_size = Vector2(60, 0)
+theme_override_font_sizes/font_size = 20
+text = "70%"
+horizontal_alignment = 2
+
+[node name="Spacer2" type="Control" parent="SettingsPanel/Frame/Margin/VBox"]
+custom_minimum_size = Vector2(0, 24)
+mouse_filter = 2
+
+[node name="BackButton" type="Button" parent="SettingsPanel/Frame/Margin/VBox"]
+custom_minimum_size = Vector2(160, 40)
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 22
+text = "返回"

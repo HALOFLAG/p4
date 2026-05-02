@@ -4,6 +4,9 @@ class_name Checkpoint
 # 旗幟造型重生點（M10）
 # 玩家碰到 → 設成本體新的 spawn_position、其他 checkpoint 失活、自己 activate（金黃 + 短暫放大）
 # 死亡時 Player.respawn() 會回到最後 active 旗幟的位置
+# Room 6：每次 body_entered 都 emit `touched` signal（不論 is_active），給 PressCounter 重置用
+
+signal touched
 
 const ACTIVE_COLOR := Color(1, 0.85, 0.3, 1)      # 金黃，已啟用
 const INACTIVE_COLOR := Color(0.45, 0.55, 0.7, 0.7)  # 暗藍灰，未啟用
@@ -23,8 +26,10 @@ func _ready() -> void:
 func _on_body_entered(body: Node2D) -> void:
 	if not body.is_in_group("player_real"):
 		return
+	# 不論是否 active 都 emit touched（讓 PressCounter 重置每次都吃到）
+	touched.emit()
 	if is_active:
-		return  # 已是當前重生點，不重複觸發
+		return  # 已是當前重生點，不重複跑 activate 動畫
 	# 設玩家 spawn
 	if body.has_method("set_spawn"):
 		body.set_spawn(global_position)

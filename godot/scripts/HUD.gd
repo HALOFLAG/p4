@@ -8,21 +8,48 @@ extends CanvasLayer
 const WARNING_DURATION := 30.0   # 黃色警示
 const CRITICAL_DURATION := 40.0  # 紅色臨界
 
+# HelpLabel idle 顯示：玩家 N 秒未移動才淡入
+const HELP_IDLE_THRESHOLD := 30.0
+const HELP_FADE_TIME := 0.5
+
 @onready var rec_label: Label = $InfoBox/RecLabel
 @onready var saves_label: Label = $InfoBox/SavesLabel
 @onready var context_hint: Label = $ContextHint
+@onready var help_label: Label = $HelpLabel
+@onready var pause_button: Button = $PauseButton
+
+const PAUSE_MENU := preload("res://scenes/PauseMenu.tscn")
+
+var _idle_time := 0.0
+var _help_visible := false
+var _help_fade_tween: Tween = null
 
 
 func _ready() -> void:
 	context_hint.visible = false
 	context_hint.text = ""
+	# HelpLabel 起始隱藏，超過 idle 閾值才淡入
+	help_label.modulate.a = 0.0
 
 	# 訂閱 PlayerController 的光點互動信號
 	PlayerController.player_on_lightpoint.connect(_on_player_on_lightpoint)
 	PlayerController.player_off_lightpoint.connect(_on_player_off_lightpoint)
 
+	# 暫停按鈕（暫停期間仍可點）
+	pause_button.process_mode = Node.PROCESS_MODE_ALWAYS
+	pause_button.pressed.connect(_on_pause_pressed)
 
-func _process(_delta: float) -> void:
+
+func _on_pause_pressed() -> void:
+	if get_tree().paused:
+		return
+	AudioManager.play_sfx("ui_click")
+	var menu := PAUSE_MENU.instantiate()
+	add_child(menu)
+
+
+func _process(delta: float) -> void:
+	_update_help_idle(delta)
 	# 錄製狀態：計時文字 + 顏色預警（每幀更新）
 	if RecordingManager.is_recording():
 		var n := RecordingManager.current.input_frames.size()
@@ -89,3 +116,31 @@ func _on_player_on_lightpoint(lp) -> void:
 func _on_player_off_lightpoint() -> void:
 	context_hint.visible = false
 	context_hint.text = ""
+
+
+# === HelpLabel idle 顯示 ===
+# 玩家連續 30 秒沒按方向 / 跳躍 → 淡入提示文字
+# 任一移動鍵按下 → 立即淡出
+func _update_help_idle(delta: float) -> void:
+	var any_movement := (
+		Input.is_action_pressed("move_left")
+		or Input.is_action_pressed("move_right")
+		or Input.is_action_pressed("jump")
+	)
+	if any_movement:
+		_idle_time = 0.0
+		if _help_visible:
+			_help_visible = false
+			_fade_help_to(0.0)
+	else:
+		_idle_time += delta
+		if _idle_time >= HELP_IDLE_THRESHOLD and not _help_visible:
+			_help_visible = true
+			_fade_help_to(1.0)
+
+
+func _fade_help_to(target_alpha: float) -> void:
+	if _help_fade_tween != null and _help_fade_tween.is_valid():
+		_help_fade_tween.kill()
+	_help_fade_tween = create_tween()
+	_help_fade_tween.tween_property(help_label, "modulate:a", target_alpha, HELP_FADE_TIME)

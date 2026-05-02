@@ -92,6 +92,7 @@ func die() -> void:
 	collision_mask = 0
 	if _freeze_tween != null and _freeze_tween.is_valid():
 		_freeze_tween.kill()
+	AudioManager.play_sfx("die")
 	queue_free()
 
 

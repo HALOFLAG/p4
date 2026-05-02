@@ -1,0 +1,29 @@
+# Godot
+.godot/
+.import/
+*.translation
+
+# Mono / .NET（保留：未來如改用 C#）
+.mono/
+mono_crash.*.json
+*.csproj
+*.sln
+
+# Demo build 輸出（用 Project → Export 產出，不入庫）
+dist/
+*.exe
+*.pck
+*.zip
+
+# 編輯器
+*.tmp
+*~
+.vscode/
+.idea/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# 原始 audio asset 包（已挑出需要的進 godot/audio/、原檔不入庫）
+sound/

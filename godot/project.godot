@@ -11,8 +11,9 @@ config_version=5
 [application]
 
 config/name="ParallelTimeline"
-run/main_scene="res://scenes/World.tscn"
+run/main_scene="res://scenes/TitleScreen.tscn"
 config/features=PackedStringArray("4.6", "GL Compatibility")
+config/icon="res://icon.svg"
 
 [autoload]
 
@@ -21,6 +22,8 @@ RitualPlayer="*res://scripts/RitualPlayer.gd"
 PlayerController="*res://scripts/PlayerController.gd"
 CarcassManager="*res://scripts/CarcassManager.gd"
 RoomManager="*res://scripts/RoomManager.gd"
+GameStats="*res://scripts/GameStats.gd"
+AudioManager="*res://scripts/AudioManager.gd"
 
 [display]
 
