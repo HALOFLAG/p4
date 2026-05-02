@@ -1,4 +1,10 @@
 extends CharacterBody2D
+class_name Player
+
+# === M9：死亡與重生 signal ===
+# 由 Hazard.gd 在偵測到本體進入時呼叫 die()
+# PlayerController 訂閱本 signal 跑黑屏 + 清分身 + reset_zone + respawn 流程
+signal died
 
 # === 走跳手感調校區 ===
 # M0 階段你會花最多時間在這幾個數字上。每改一個跑一次遊戲玩 1 分鐘。
@@ -28,7 +34,22 @@ const JUMP_BUFFER := 0.15        # 落地前 0.15 秒按跳，落地立即跳
 var coyote_timer := 0.0
 var jump_buffer_timer := 0.0
 var spawn_position: Vector2
-var dead := false  # 自爆動畫中、等待重生時為 true
+
+# 面向方向：1 = 右、-1 = 左。每次水平移動時更新；停下後保留最後方向
+# 給錄製儀式用——分身從本體的面向側淡入
+var facing_dir: int = 1
+
+# === 凍結機制（M4 起，取代舊的 dead/self_destruct）===
+# 錄製期間 PlayerController.start_recording 會呼叫 freeze()
+# 結束錄製時 PlayerController.end_recording 會呼叫 unfreeze()
+var is_frozen := false
+var _saved_collision_layer: int = 0
+var _saved_collision_mask: int = 0
+
+# === M9：死亡狀態 ===
+# 由 Hazard 偵測到本體後呼叫 die()，emit died 給 PlayerController 處理黑屏 + 重生
+# is_dead 防止 die() 被連續觸發
+var is_dead := false
 
 # === 輸入狀態（每個 tick 由 _read_inputs() 填入）===
 # 抽出這層，是為了讓 Clone 子類可以覆寫成「從 Recording 資料讀」而非鍵盤
@@ -44,18 +65,22 @@ func _ready() -> void:
 	spawn_position = position
 	# 加入 "player_real" group：讓 Exit 等只認玩家本人的東西能用 group 過濾
 	# Clone 不呼叫 super._ready()，所以 Clone 不會在這個 group 裡 — 自然分流
+	# RecordingProxy 也不呼叫 super._ready()，同樣不在 group 裡
 	add_to_group("player_real")
+	# M9：向 PlayerController 註冊，讓它接 died signal
+	PlayerController.register_player(self)
 
 
 func _physics_process(delta: float) -> void:
-	if dead:
+	# 凍結期間（錄製中本體 / 之後 M7 凍結的 Clone）：完全不動、不讀輸入
+	if is_frozen:
 		return
 
 	_read_inputs()
 	_handle_special_actions()
 
-	# self_destruct 可能在上一行被觸發（dead 變 true）
-	if dead:
+	# _handle_special_actions 可能呼叫 PlayerController.start_recording 進而 freeze 自己
+	if is_frozen:
 		return
 
 	_apply_movement(delta)
@@ -67,20 +92,34 @@ func _physics_process(delta: float) -> void:
 
 # === 預設：讀鍵盤 ===
 # Clone 會覆寫成從 recording.input_frames[current_frame] 讀
+# RecordingProxy 沿用本預設（讀鍵盤）
 func _read_inputs() -> void:
 	input_left = Input.is_action_pressed("move_left")
 	input_right = Input.is_action_pressed("move_right")
 	input_jump = Input.is_action_pressed("jump")
 
 
-# === 預設：處理玩家特定按鍵 R / X ===
-# Clone 會覆寫成 pass（分身不應該觸發錄製或自爆）
+# === 預設：處理本體特定按鍵 ===
+# M4：R 觸發錄製
+# M6：站在亮光點上 R 改為「重錄該槽位」、Q 改為「刪除該槽位」
+# Clone 覆寫成 pass（分身不應該觸發錄製）
+# RecordingProxy 覆寫成「R = 結束錄製」
 func _handle_special_actions() -> void:
-	if Input.is_action_just_pressed("self_destruct"):
-		self_destruct()
-		return
 	if Input.is_action_just_pressed("record"):
-		RecordingManager.start_recording(position)
+		# 站亮光點上 → 重錄該槽位；不在光點上 → 標準新錄製（FIFO）
+		var lp = PlayerController.get_current_bright_lp()
+		if lp != null:
+			PlayerController.start_recording(self, lp.slot_index)
+		else:
+			# 限制：新錄製只能在地面起手——避免空中凍結懸浮、解凍墜落、儀式感斷裂
+			if not is_on_floor():
+				return
+			PlayerController.start_recording(self)
+	elif Input.is_action_just_pressed("delete_slot"):
+		# 站亮光點上才有效
+		var lp = PlayerController.get_current_bright_lp()
+		if lp != null:
+			PlayerController.delete_slot(lp.slot_index)
 
 
 # === 共用的物理移動邏輯 ===
@@ -95,6 +134,8 @@ func _apply_movement(delta: float) -> void:
 		dir += 1.0
 
 	if dir != 0.0:
+		# 更新面向方向（給錄製儀式的分身偏移用）
+		facing_dir = 1 if dir > 0.0 else -1
 		velocity.x = move_toward(velocity.x, dir * MAX_SPEED, ACCEL * delta)
 	else:
 		var d := GROUND_DECEL if is_on_floor() else AIR_DECEL
@@ -111,7 +152,7 @@ func _apply_movement(delta: float) -> void:
 	if is_on_floor():
 		coyote_timer = COYOTE_TIME
 	else:
-		coyote_timer = max(coyote_timer - delta, 0.0)
+		coyote_timer = maxf(coyote_timer - delta, 0.0)
 
 	# --- 4. Jump buffer（從 input_jump 推導 just_pressed）---
 	# just_pressed = 這 tick 按住 && 上 tick 沒按住
@@ -119,7 +160,7 @@ func _apply_movement(delta: float) -> void:
 	if jump_just_pressed:
 		jump_buffer_timer = JUMP_BUFFER
 	else:
-		jump_buffer_timer = max(jump_buffer_timer - delta, 0.0)
+		jump_buffer_timer = maxf(jump_buffer_timer - delta, 0.0)
 
 	# --- 5. 真正執行跳躍 ---
 	if jump_buffer_timer > 0.0 and coyote_timer > 0.0:
@@ -139,30 +180,61 @@ func _apply_movement(delta: float) -> void:
 
 # === 預設：把這 tick 的輸入存進 RecordingManager ===
 # Clone 會覆寫成 pass（分身的輸入是回放，不應該再被錄）
+# RecordingProxy 沿用本預設（會錄自己的輸入）
 func _record_frame_if_needed() -> void:
 	if RecordingManager.is_recording():
 		RecordingManager.add_frame(input_left, input_right, input_jump)
 
 
-func self_destruct() -> void:
-	# 1. 結束當前錄製（如果有）→ 自動進入存檔清單
-	# 2. 播放閃紅 + 縮成小點的小動畫
-	# 3. 動畫結束 → 重生回起點
-	if dead:
+# === 凍結機制（M4 新增） ===
+# 由 PlayerController.start_recording 呼叫
+# 凍結期間：不執行 _physics_process、無物理碰撞、velocity 歸零
+func freeze() -> void:
+	if is_frozen:
 		return
-	if RecordingManager.is_recording():
-		RecordingManager.stop_recording()
-	dead = true
+	is_frozen = true
+	_saved_collision_layer = collision_layer
+	_saved_collision_mask = collision_mask
+	collision_layer = 0
+	collision_mask = 0
 	velocity = Vector2.ZERO
-	var tween := create_tween()
-	tween.tween_property(visual, "modulate", Color(1, 0.3, 0.3, 1), 0.05)
-	tween.parallel().tween_property(visual, "scale", Vector2(0.1, 0.1), 0.25)
-	tween.tween_callback(respawn)
 
 
+# 由 PlayerController.end_recording 呼叫
+func unfreeze() -> void:
+	if not is_frozen:
+		return
+	is_frozen = false
+	collision_layer = _saved_collision_layer
+	collision_mask = _saved_collision_mask
+
+
+# === M9：死亡與重生 ===
+
+# M10：由 Checkpoint 在玩家碰到時呼叫，更新重生位置
+func set_spawn(pos: Vector2) -> void:
+	spawn_position = pos
+
+
+# 由 Hazard.gd 在偵測到 Player（本體）進入時呼叫
+# 立刻發 died signal、鎖物理（避免在黑屏期間繼續移動）；重生由 PlayerController 流程驅動
+func die() -> void:
+	if is_dead:
+		return
+	is_dead = true
+	velocity = Vector2.ZERO
+	is_frozen = true  # 借用 freeze 的 _physics_process 早退
+	died.emit()
+
+
+# 由 PlayerController 在黑屏到底、準備淡出前呼叫
+# 重置 position 與物理狀態到 spawn_position（M9 階段先用 _ready 時記錄的位置）
 func respawn() -> void:
+	is_dead = false
+	is_frozen = false
 	position = spawn_position
 	velocity = Vector2.ZERO
-	visual.scale = Vector2.ONE
-	visual.modulate = Color(0.95, 0.95, 0.95, 1)
-	dead = false
+	coyote_timer = 0.0
+	jump_buffer_timer = 0.0
+	input_jump_prev = false
+	modulate = Color(1, 1, 1, 1)

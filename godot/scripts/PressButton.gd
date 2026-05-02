@@ -1,8 +1,8 @@
 extends Area2D
 class_name PressButton
 
-# 重量感應按鈕：當有 CharacterBody2D（玩家或分身）站在上面時觸發
-# M4 殘骸物理化後，殘骸（StaticBody2D / RigidBody2D）也應該能觸發 — 之後修這條 filter
+# 重量感應按鈕：當有 CharacterBody2D（玩家/分身）或物理殘骸站在上面時觸發
+# M8：殘骸（StaticBody2D 在 "physical_carcass" group）也算重量
 
 signal pressed_changed(is_pressed: bool)
 
@@ -10,13 +10,20 @@ var bodies_on := 0
 
 
 func _ready() -> void:
+	# M8：mask 統一覆蓋——Player(1) + Clone(2) + 所有殘骸 layer (124) = 127
+	# 蓋掉 .tscn 的 3，避免每個按鈕場景手動更新
+	collision_mask = 3 + PhysicalCarcass.ALL_CARCASS_LAYERS
 	body_entered.connect(_on_body_entered)
 	body_exited.connect(_on_body_exited)
 
 
+# 接受角色（玩家/分身）+ 物理殘骸；過濾掉地板/牆等世界靜態
+func _accepts_body(body: Node2D) -> bool:
+	return body is CharacterBody2D or body.is_in_group("physical_carcass")
+
+
 func _on_body_entered(body: Node2D) -> void:
-	# 忽略世界靜態物件（牆/地板與 Area2D 重疊也會觸發）
-	if not body is CharacterBody2D:
+	if not _accepts_body(body):
 		return
 	bodies_on += 1
 	if bodies_on == 1:
@@ -25,7 +32,7 @@ func _on_body_entered(body: Node2D) -> void:
 
 
 func _on_body_exited(body: Node2D) -> void:
-	if not body is CharacterBody2D:
+	if not _accepts_body(body):
 		return
 	bodies_on -= 1
 	if bodies_on == 0:

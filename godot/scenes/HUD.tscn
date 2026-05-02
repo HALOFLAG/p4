@@ -1,37 +1,48 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://cs41vxxdbcayy"]
 
-[ext_resource type="Script" path="res://scripts/HUD.gd" id="1_hud"]
+[ext_resource type="Script" uid="uid://2kusd88cwfch" path="res://scripts/HUD.gd" id="1_hud"]
 
-[node name="HUD" type="CanvasLayer"]
+[node name="HUD" type="CanvasLayer" unique_id=176175775]
 script = ExtResource("1_hud")
 
-[node name="RedTint" type="ColorRect" parent="."]
-visible = false
-anchor_right = 1.0
-anchor_bottom = 1.0
-mouse_filter = 2
-color = Color(1, 0, 0, 0.15)
-
-[node name="InfoBox" type="VBoxContainer" parent="."]
+[node name="InfoBox" type="VBoxContainer" parent="." unique_id=685960715]
 offset_left = 20.0
-offset_top = 20.0
+offset_top = 70.0
 offset_right = 1200.0
-offset_bottom = 100.0
+offset_bottom = 270.0
 mouse_filter = 2
 
-[node name="RecLabel" type="Label" parent="InfoBox"]
-text = ""
+[node name="RecLabel" type="Label" parent="InfoBox" unique_id=56154899]
+layout_mode = 2
 
-[node name="SavesLabel" type="Label" parent="InfoBox"]
+[node name="SavesLabel" type="Label" parent="InfoBox" unique_id=1166655336]
+layout_mode = 2
 text = "Saves: 0"
 
-[node name="HelpLabel" type="Label" parent="."]
+[node name="HelpLabel" type="Label" parent="." unique_id=497480656]
+anchors_preset = 12
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 20.0
-offset_top = -40.0
-offset_right = -20.0
-offset_bottom = -10.0
-mouse_filter = 2
-text = "R = 錄製   X = 自爆/結束錄製   1-9 = 召喚對應存檔   方向 = A D ←→   跳 = Space W ↑"
+offset_left = 9.0
+offset_top = -60.0
+offset_right = -31.0
+offset_bottom = -30.0
+grow_horizontal = 2
+grow_vertical = 0
+scale = Vector2(0.9968293, 1)
+text = "R = 錄製/結束   1-5 = 召喚槽位   站亮光點上：R 重錄、Q 刪除   方向 = A D ←→   跳 = Space W ↑"
+
+[node name="ContextHint" type="Label" parent="." unique_id=1992077221]
+visible = false
+modulate = Color(1, 1, 0.85, 1)
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -300.0
+offset_top = -160.0
+offset_right = 300.0
+offset_bottom = -120.0
+horizontal_alignment = 1

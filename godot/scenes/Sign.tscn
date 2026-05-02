@@ -1,0 +1,22 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/Sign.gd" id="1_sign"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_sign"]
+size = Vector2(140, 100)
+
+[node name="Sign" type="Area2D"]
+collision_layer = 0
+collision_mask = 1
+script = ExtResource("1_sign")
+
+[node name="Collision" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_sign")
+
+[node name="Label" type="Label" parent="."]
+offset_left = -120.0
+offset_top = -80.0
+offset_right = 120.0
+offset_bottom = -50.0
+horizontal_alignment = 1
+text = ""
