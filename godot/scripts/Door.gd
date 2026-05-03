@@ -5,9 +5,9 @@ class_name Door
 # 視覺：top 向下沉、bottom 不動（門從上方往下縮減直到消失，像沉入地面）
 # 碰撞用 disable 切換（避免縮放 CollisionShape 在 Godot 物理引擎裡的詭異行為）
 
-const OPEN_TIME := 2.0   # 完全開啟需要 2 秒
-const CLOSE_TIME := 2.0  # 完全關閉需要 2 秒
-const PASS_THROUGH_THRESHOLD := 0.50  # 開到這個比例以上才允許穿過
+const OPEN_TIME := 0.6   # 完全開啟需要 0.6 秒（縮短：原 2.0 → 0.6 配合嚴格實體）
+const CLOSE_TIME := 0.6  # 完全關閉需要 0.6 秒
+const PASS_THROUGH_THRESHOLD := 1.0  # 嚴格實體：必須完全沉入地面才允許穿過、消除穿模
 
 # 可調門高（每個 Door 實例 inspector 設定）。需與 Polygon2D 高度、Collision shape size.y 一致
 @export var door_height: float = 200.0
@@ -23,7 +23,7 @@ var should_open := false
 func set_target(open: bool) -> void:
 	# 播 SFX 只在「關 → 開」轉換、避免 AND-gate 多次連發
 	if open and not should_open:
-		AudioManager.play_sfx("door_open")
+		AudioManager.play_sfx_at("door_open", global_position)
 	should_open = open
 
 
@@ -38,5 +38,6 @@ func _physics_process(delta: float) -> void:
 	visual.position.y = open_progress * door_height
 	visual.scale.y = maxf(1.0 - open_progress, 0.001)
 
-	# 碰撞切換：開到 95% 以上才放行（不縮放 CollisionShape，只 toggle disabled）
+	# 碰撞切換：必須完全開啟（100%）才放行，視覺與碰撞 1:1 對齊、無穿模
+	# 不縮放 CollisionShape、只 toggle disabled
 	collision.disabled = open_progress >= PASS_THROUGH_THRESHOLD

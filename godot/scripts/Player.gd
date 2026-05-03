@@ -11,13 +11,13 @@ signal died
 # 數值單位：像素／秒、像素／秒平方。
 
 # 水平移動（Limbo 重量路線：放慢、給慣性）
-const MAX_SPEED := 190.0          # 跑到底的速度（之前 250→180，慢一點才有重量）
+const MAX_SPEED := 190.0          # 跑到底的速度（慢一點才有重量）
 const ACCEL := 2000.0             # 加速度（0.1 秒到頂速，有「啟動」感而非瞬移）
 const GROUND_DECEL := 1600.0      # 地面放開方向時的減速
 const AIR_DECEL := 700.0          # 空中減速明顯比地面小，營造離地後的飄
 
 # 跳躍
-const JUMP_VELOCITY := -500.0     # 起跳初速（之前 600→480，更像「人在跳」）
+const JUMP_VELOCITY := -500.0     # 起跳初速
 const JUMP_CUT_VELOCITY := -150.0 # 「短按跳」上升被截斷後的速度
 
 # 不對稱重力：上升輕、下降重，讓跳躍上升飄逸、落地俐落
@@ -39,7 +39,7 @@ var spawn_position: Vector2
 # 給錄製儀式用——分身從本體的面向側淡入
 var facing_dir: int = 1
 
-# === 凍結機制（M4 起，取代舊的 dead/self_destruct）===
+# === 凍結機制 ===
 # 錄製期間 PlayerController.start_recording 會呼叫 freeze()
 # 結束錄製時 PlayerController.end_recording 會呼叫 unfreeze()
 var is_frozen := false
@@ -100,17 +100,23 @@ func _read_inputs() -> void:
 
 
 # === 預設：處理本體特定按鍵 ===
-# M4：R 觸發錄製
-# M6：站在亮光點上 R 改為「重錄該槽位」、Q 改為「刪除該槽位」
+# R 鍵優先序：① 在傳送門範圍 → 傳送（最高）② 站亮光點上 → 重錄該槽位 ③ 預設 → 新錄製
+# Q 鍵：站亮光點上才有效（刪除該槽位）
 # Clone 覆寫成 pass（分身不應該觸發錄製）
 # RecordingProxy 覆寫成「R = 結束錄製」
 func _handle_special_actions() -> void:
 	if Input.is_action_just_pressed("record"):
-		# 站亮光點上 → 重錄該槽位；不在光點上 → 標準新錄製（FIFO）
+		# ① 傳送門最優先
+		var tp = PlayerController.get_current_teleporter()
+		if tp != null:
+			PlayerController.activate_teleporter(self, tp)
+			return
+		# ② 站亮光點上 → 重錄該槽位
 		var lp = PlayerController.get_current_bright_lp()
 		if lp != null:
 			PlayerController.start_recording(self, lp.slot_index)
 		else:
+			# ③ 標準新錄製（FIFO）
 			# 限制：新錄製只能在地面起手——避免空中凍結懸浮、解凍墜落、儀式感斷裂
 			if not is_on_floor():
 				return
@@ -167,7 +173,7 @@ func _apply_movement(delta: float) -> void:
 		velocity.y = JUMP_VELOCITY
 		jump_buffer_timer = 0.0
 		coyote_timer = 0.0
-		AudioManager.play_sfx("jump")
+		_play_jump_sfx()
 
 	# --- 6. 變高跳：跳到一半放開，把上升速度截斷 ---
 	# just_released = 這 tick 沒按住 && 上 tick 按住
@@ -185,6 +191,12 @@ func _apply_movement(delta: float) -> void:
 func _record_frame_if_needed() -> void:
 	if RecordingManager.is_recording():
 		RecordingManager.add_frame(input_left, input_right, input_jump)
+
+
+# === 預設：跳躍音效用全域預設音量 ===
+# Clone 會覆寫成低 6 dB（≈ -50% 振幅、避免一堆分身同時跳很吵）
+func _play_jump_sfx() -> void:
+	AudioManager.play_sfx("jump")
 
 
 # === 凍結機制（M4 新增） ===
@@ -231,7 +243,7 @@ func die() -> void:
 
 
 # 由 PlayerController 在黑屏到底、準備淡出前呼叫
-# 重置 position 與物理狀態到 spawn_position（M9 階段先用 _ready 時記錄的位置）
+# 重置 position 與物理狀態到 spawn_position（由 Checkpoint.set_spawn 動態更新）
 func respawn() -> void:
 	is_dead = false
 	is_frozen = false

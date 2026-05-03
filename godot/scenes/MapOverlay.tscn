@@ -1,0 +1,42 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/MapOverlay.gd" id="1_map"]
+
+[node name="MapOverlay" type="CanvasLayer"]
+layer = 150
+script = ExtResource("1_map")
+
+[node name="Canvas" type="Control" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="TitleLabel" type="Label" parent="Canvas"]
+offset_left = 40.0
+offset_top = 24.0
+offset_right = 400.0
+offset_bottom = 56.0
+text = "地圖"
+theme_override_colors/font_color = Color(0.95, 0.95, 0.95, 1)
+theme_override_font_sizes/font_size = 22
+
+[node name="HintLabel" type="Label" parent="Canvas"]
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 40.0
+offset_top = -56.0
+offset_right = 600.0
+offset_bottom = -24.0
+text = "Tab / ESC 關閉"
+theme_override_colors/font_color = Color(0.7, 0.75, 0.85, 1)
+theme_override_font_sizes/font_size = 16
+
+[node name="HoverLabel" type="Label" parent="Canvas"]
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 240.0
+offset_bottom = 28.0
+text = ""
+theme_override_colors/font_color = Color(1, 0.85, 0.3, 1)
+theme_override_font_sizes/font_size = 16
+mouse_filter = 2

@@ -14,6 +14,10 @@ const FROZEN_MODULATE := Color(0.4, 0.5, 0.7, 0.5)  # 暗藍灰 + 半透明，�
 const NORMAL_MODULATE := Color(1, 1, 1, 1)
 const FREEZE_FADE_TIME := 0.3
 
+# 分身跳躍音效音量（dB）：比玩家本體 SFX_DEFAULT_DB["jump"] 再低 6 dB ≈ -50% 振幅
+# 多個分身可能同時跳、避免疊聲過吵
+const JUMP_SFX_DB := -18.0
+
 var recording: Recording = null
 var current_frame := 0
 var finished := false
@@ -65,6 +69,14 @@ func _record_frame_if_needed() -> void:
 	pass
 
 
+# === 覆寫：分身跳躍音效低 6 dB + 房間距離衰減 ===
+# 基礎音量比玩家本體再低 6 dB（避免一堆分身同時跳很吵）
+# 再透過 play_sfx_at 依「分身所在房間」與「玩家當前房間」距離衰減
+# 隔房分身的跳躍會被壓得更小聲、超過 3 房直接不播
+func _play_jump_sfx() -> void:
+	AudioManager.play_sfx_at("jump", global_position, JUMP_SFX_DB)
+
+
 func _physics_process(delta: float) -> void:
 	super._physics_process(delta)
 	# Recording 播完後淡出消失
@@ -92,7 +104,8 @@ func die() -> void:
 	collision_mask = 0
 	if _freeze_tween != null and _freeze_tween.is_valid():
 		_freeze_tween.kill()
-	AudioManager.play_sfx("die")
+	# 分身死亡套距離衰減（別房死亡的分身不應該與本體死亡同等響度）
+	AudioManager.play_sfx_at("die", global_position)
 	queue_free()
 
 

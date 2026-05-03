@@ -8,6 +8,9 @@ signal recording_ended
 # M6：玩家在亮光點上 / 離開所有亮光點
 signal player_on_lightpoint(lp)
 signal player_off_lightpoint
+# 玩家進入 / 離開傳送門範圍（HUD 用來顯示「按 R 傳送」提示）
+signal player_on_teleporter(tp)
+signal player_off_teleporter
 # 錄製期間分身擦過本體（中心距離由「未重疊」變「重疊」時 emit 一次）
 # 參數：兩者中點的世界座標，給粒子等視覺效果用
 signal proxy_brushed_body(world_position: Vector2)
@@ -27,6 +30,10 @@ var _slot_lightpoints: Dictionary = {}
 # M6：玩家當前所在的 LightPoints（可能多個重疊）+ 最近的亮光點
 var _lps_with_player: Array = []
 var _current_bright_lp = null
+
+# 玩家當前所在的 Teleporters（可能多個重疊）+ 最後進入的視為當前
+var _teleporters_with_player: Array = []
+var _current_teleporter: Teleporter = null
 
 # M6：本次錄製的目標槽位（-1 = 新錄製、>=0 = 重錄該槽位）
 var _target_slot: int = -1
@@ -49,10 +56,15 @@ const DEATH_FADE_TIME := 0.3
 # A3：錄製最短時長（< 此 frame 數則 proxy 死亡時不存槽位）
 const MIN_RECORDING_FRAMES := 30  # 0.5s @ 60Hz
 # 錄製時長上限：到此自動 end_recording（保住玩家成果，不丟棄）
-const MAX_RECORDING_FRAMES := 2700  # 45s @ 60Hz
+const MAX_RECORDING_FRAMES := 1800  # 30s @ 60Hz（C1 後縮短：強迫每段為單一原子任務）
 
 const RECORDING_PROXY_SCENE := preload("res://scenes/RecordingProxy.tscn")
 const LIGHT_POINT_SCENE := preload("res://scenes/LightPoint.tscn")
+const MAP_OVERLAY := preload("res://scenes/MapOverlay.tscn")
+
+# 玩家手動取消 / A3 太短 / 本體死亡中斷時、proxy 與本體淡入淡出時長
+# 比正常結束儀式（~0.7s）短、與 letterbox 收回（0.3s）大致同步
+const ABORT_FADE_TIME := 0.25
 
 
 func _ready() -> void:
@@ -186,15 +198,14 @@ func start_recording(player, target_slot: int = -1) -> void:
 	_freeze_all_clones()
 
 	# 2. 決定 proxy 起始位置
-	#    新錄製：proxy 在本體位置（將朝外分裂）
-	#    重錄：proxy 在 LP 中心（snap，停在原地淡入，不分裂）
+	#    新錄製：proxy 在本體位置
+	#    重錄：proxy 在 LP 中心（snap）
+	# C1 後 proxy 不再側位移、新錄/重錄共用同一儀式
 	var proxy: Node2D = RECORDING_PROXY_SCENE.instantiate()
-	var animate_split := true
 	if target_slot >= 0:
 		var lp = _slot_lightpoints.get(target_slot)
 		if lp != null and is_instance_valid(lp):
 			proxy.position = lp.position
-			animate_split = false
 		else:
 			# Fallback：找不到 LP（不該發生）→ 退回新錄製行為
 			proxy.position = player.position
@@ -206,12 +217,20 @@ func start_recording(player, target_slot: int = -1) -> void:
 	_scene_root.add_child(proxy)
 	current_proxy = proxy
 
+	# C1：proxy 與 body 起始同位置 → 預設 overlap 為 true
+	# 否則 ritual 結束第一個 physics frame 會 false→true 邊緣誤觸發 brush 粒子+tint
+	# 玩家須真的「走出 40px 再回來」才會 emit brush（這才是擦過的本意）
+	_proxy_overlapping_body = true
+
 	# 3. 通知 RecordingManager（spawn_pos 用 proxy 位置，儀式內可能再更新）
 	RecordingManager.start_recording(proxy.position)
 
-	# 4. 播放儀式（重錄不分裂、新錄製分裂）
+	# 4. 播放儀式（C1：雙影分裂回合、無位移）
 	AudioManager.play_sfx("record_start")
-	RitualPlayer.play_recording_start_ritual(player, proxy, animate_split)
+	RitualPlayer.play_recording_start_ritual(player, proxy)
+
+	# 開始錄製 → 5 槽全滿時最舊 LP 顯示 OLD 警告
+	_update_lp_fifo_warnings()
 
 	if target_slot >= 0:
 		print("[CTRL] Re-recording slot %d @ %s" % [target_slot + 1, proxy.position])
@@ -255,6 +274,9 @@ func end_recording() -> void:
 	_unfreeze_all_clones()
 	_recording_start_room = null
 
+	# 錄製結束 → 清掉所有 OLD 警告
+	_update_lp_fifo_warnings()
+
 	print("[CTRL] Recording ended (rec saved: ", rec != null, ")")
 	recording_ended.emit()
 
@@ -280,34 +302,111 @@ func _on_player_died() -> void:
 	if state == State.RECORDING:
 		_abort_recording()
 
-	# 1. 黑屏淡入
-	var t1 := create_tween()
-	t1.tween_property(_death_rect, "color:a", 1.0, DEATH_FADE_TIME)
-	await t1.finished
+	await _run_fade_transition(DEATH_FADE_TIME, func():
+		# 1. 清所有 active Clone
+		for c in get_tree().get_nodes_in_group("clone"):
+			if is_instance_valid(c):
+				c.queue_free()
 
-	# 2. 清所有 active Clone
-	for c in get_tree().get_nodes_in_group("clone"):
-		if is_instance_valid(c):
-			c.queue_free()
+		# 2. 當前 zone 內物理殘骸 → 痕跡（跨 zone 不變）
+		var zone = get_current_zone()
+		if zone != null:
+			CarcassManager.reset_zone(zone)
+		else:
+			print("[CTRL] Player 死亡時未在任何 zone 內，跳過 reset_zone")
 
-	# 3. 當前 zone 內物理殘骸 → 痕跡（跨 zone 不變）
-	var zone = get_current_zone()
-	if zone != null:
-		CarcassManager.reset_zone(zone)
-	else:
-		print("[CTRL] Player 死亡時未在任何 zone 內，跳過 reset_zone")
-
-	# 4. 重生本體
-	var p = _get_player_real()
-	if p != null and p.has_method("respawn"):
-		p.respawn()
-
-	# 5. 黑屏淡出
-	var t2 := create_tween()
-	t2.tween_property(_death_rect, "color:a", 0.0, DEATH_FADE_TIME)
-	await t2.finished
+		# 3. 重生本體
+		var p = _get_player_real()
+		if p != null and p.has_method("respawn"):
+			p.respawn()
+	, DEATH_FADE_TIME)
 
 	print("[CTRL] 本體重生完成")
+
+
+# 黑屏轉場 helper：fade-in → 跑 mid_action → fade-out
+# 死亡與傳送共用、各自設不同 fade 時長
+# mid_action 在全黑時執行（玩家看不到位置變化）
+func _run_fade_transition(fade_in_time: float, mid_action: Callable, fade_out_time: float) -> void:
+	var t1 := create_tween()
+	t1.tween_property(_death_rect, "color:a", 1.0, fade_in_time)
+	await t1.finished
+
+	mid_action.call()
+
+	var t2 := create_tween()
+	t2.tween_property(_death_rect, "color:a", 0.0, fade_out_time)
+	await t2.finished
+
+
+# === Teleporter 互動（玩家進出範圍偵測 + 觸發傳送）===
+
+# Teleporter._ready 時呼叫，連 zone 信號
+func register_teleporter(tp: Teleporter) -> void:
+	tp.player_entered_zone.connect(_on_teleporter_entered)
+	tp.player_exited_zone.connect(_on_teleporter_exited)
+
+
+func _on_teleporter_entered(tp: Teleporter) -> void:
+	if not _teleporters_with_player.has(tp):
+		_teleporters_with_player.append(tp)
+	_update_current_teleporter()
+
+
+func _on_teleporter_exited(tp: Teleporter) -> void:
+	_teleporters_with_player.erase(tp)
+	_update_current_teleporter()
+
+
+# 取最後進入的 teleporter 當作「當前」、與 zone / lp 同邏輯
+func _update_current_teleporter() -> void:
+	var new_tp: Teleporter = null
+	if not _teleporters_with_player.is_empty():
+		new_tp = _teleporters_with_player[-1]
+	if new_tp != _current_teleporter:
+		_current_teleporter = new_tp
+		if new_tp != null:
+			player_on_teleporter.emit(new_tp)
+		else:
+			player_off_teleporter.emit()
+
+
+# Player.gd R 鍵優先序判定用
+func get_current_teleporter() -> Teleporter:
+	return _current_teleporter
+
+
+# 由 Player._handle_special_actions 呼叫；錄製中禁用
+# 流程：開地圖（選擇模式、source = 玩家所在 tp）→ await 玩家點選目標 → fade + 瞬移
+# 玩家按 ESC 取消會 emit null、本函式直接 return（不傳送）
+#
+# 重要：fade 期間必須 freeze 玩家、否則：
+#   1. record action 同時綁 LMB（見 project.godot）
+#   2. 玩家點地圖目標的 LMB 等於按了 record
+#   3. MapOverlay._close 解除 pause 後、Player._physics_process 同幀又會看到 record just_pressed
+#   4. Player 又呼叫 activate_teleporter、開出第二張地圖
+# Player.freeze() 把 is_frozen 設 true、_physics_process 早退、不處理 special actions
+func activate_teleporter(player: Node2D, source_tp: Teleporter) -> void:
+	if state == State.RECORDING:
+		return
+	if source_tp == null or not is_instance_valid(source_tp):
+		return
+	var overlay = MAP_OVERLAY.instantiate()
+	add_child(overlay)
+	overlay.enter_selection_mode(source_tp)
+	# await signal 第一個參數；ESC/Tab 取消時 emit null
+	var dest_tp = await overlay.destination_selected
+	if dest_tp == null or not is_instance_valid(dest_tp):
+		return
+	# 凍結玩家、避免 LMB-as-record 在 unpause 後同幀又觸發 R 邏輯
+	player.freeze()
+	var dest: Vector2 = dest_tp.global_position
+	await _run_fade_transition(0.15, func():
+		player.position = dest
+		player.velocity = Vector2.ZERO
+	, 0.15)
+	player.unfreeze()
+	print("[CTRL] 傳送至 %s（從 %s 到 %s）" % [dest, source_tp.name, dest_tp.name])
 
 
 # === M9 / S15：A3 — RecordingProxy 撞 hazard ===
@@ -360,14 +459,27 @@ func handle_recording_proxy_death(death_position: Vector2) -> void:
 		p.unfreeze()
 	_unfreeze_all_clones()
 
+	# 錄製結束 → 清掉所有 OLD 警告
+	_update_lp_fifo_warnings()
+
 	print("[CTRL] A3：proxy 死亡、錄製存到槽位 %d、殘骸生成 @ %s" % [
 		(rec.slot_index + 1) if rec else -1, death_position
 	])
 	recording_ended.emit()
 
 
-# 中斷錄製、丟棄資料（A3 太短時 / 本體在錄製中死亡時用）
-# 不跑完整結束儀式（沒 body/proxy fade）但要單獨收紅框
+# 由 RecordingProxy 在玩家錄製中按 RMB/E 時呼叫
+# 公開包裝、保留 _abort_recording 為內部用（A3 太短 / 死亡路徑各有自己語意）
+func cancel_recording_by_user() -> void:
+	if state != State.RECORDING:
+		return
+	print("[CTRL] 玩家手動取消錄製")
+	_abort_recording()
+
+
+# 中斷錄製、丟棄資料（A3 太短時 / 本體在錄製中死亡時 / 玩家手動取消用）
+# 不跑完整結束儀式（沒亮起 / 散粒子）、但 proxy 與本體用 ABORT_FADE_TIME 淡入淡出避免瞬切突兀
+# 與 letterbox 收回（0.3s）大致同步、體感平順
 func _abort_recording() -> void:
 	if state != State.RECORDING:
 		return
@@ -380,16 +492,26 @@ func _abort_recording() -> void:
 	current_player = null
 	current_proxy = null
 
+	# Proxy：停物理（不再回應輸入或繼續運動）+ 淡出 0.25s 後 queue_free
+	# tween 綁在 pr 自己、若意外被外部 free 也會自動 kill、不會 tween 已釋放物件
 	if pr and is_instance_valid(pr):
-		pr.queue_free()
+		pr.set_physics_process(false)
+		var pr_tween := pr.create_tween()
+		pr_tween.tween_property(pr, "modulate:a", 0.0, ABORT_FADE_TIME)
+		pr_tween.tween_callback(pr.queue_free)
+	# 本體：modulate 從凍結中的 0.2 alpha 平滑淡回正常白；同時立刻 unfreeze
+	# 玩家在淡入過程中已可操作（取消的「快速恢復控制」手感）
 	if p and is_instance_valid(p):
-		# 把錄製期間 fade 到 0.5 的本體 modulate 直接還原（無 tween，快速）
-		p.modulate = Color(1, 1, 1, 1)
+		var p_tween := p.create_tween()
+		p_tween.tween_property(p, "modulate", Color(1, 1, 1, 1), ABORT_FADE_TIME)
 		p.unfreeze()
-	# 單獨收掉 RitualPlayer 的紅框
+	# 單獨收掉 RitualPlayer 的紅框（既有 0.3s）
 	RitualPlayer.fade_out_recording_frame()
 	_unfreeze_all_clones()
 	_recording_start_room = null
+
+	# 錄製中斷 → 清掉所有 OLD 警告
+	_update_lp_fifo_warnings()
 
 	recording_ended.emit()
 
@@ -421,6 +543,7 @@ func _on_slot_assigned(slot_index: int, recording) -> void:
 	if _slot_lightpoints.has(slot_index):
 		# 重錄：LP 已存在、保持原位、不重生
 		print("[CTRL] 槽位 %d 重錄完成（LP 留在原位）" % (slot_index + 1))
+		_update_lp_fifo_warnings()
 		return
 	if _scene_root == null or not is_instance_valid(_scene_root):
 		print("[CTRL] _scene_root 無效，無法生成光點")
@@ -434,6 +557,8 @@ func _on_slot_assigned(slot_index: int, recording) -> void:
 	lp.body_entered.connect(_on_lp_body_entered.bind(lp))
 	lp.body_exited.connect(_on_lp_body_exited.bind(lp))
 	print("[CTRL] 槽位 %d 光點生成 @ %s" % [slot_index + 1, recording.spawn_position])
+	# 槽位狀態變動 → 重新計算 FIFO OLD 警告（保險、即使錄製中信號也能正確）
+	_update_lp_fifo_warnings()
 
 
 # 槽位被主動刪除（M6 Q 鍵）：光點淡出消失
@@ -445,6 +570,24 @@ func _on_slot_cleared(slot_index: int) -> void:
 		_lps_with_player.erase(lp)
 	_slot_lightpoints.erase(slot_index)
 	_update_current_lp()
+	# 槽位刪除後可能不再滿、清掉 OLD
+	_update_lp_fifo_warnings()
+
+
+# 計算當前哪些 LP 該顯示 OLD（FIFO 即將替換警告）
+# 條件：state == RECORDING + 新錄製（非重錄）+ 5 槽全滿 → 最舊 LP 顯示 OLD
+# 與 HUD 既有的 ⚠ FIFO 警告判定條件一致（HUD.gd _process 內 fifo_warning_slot 邏輯）
+func _update_lp_fifo_warnings() -> void:
+	var should_warn: bool = (
+		state == State.RECORDING
+		and _target_slot == -1
+		and RecordingManager.filled_count() == RecordingManager.SLOT_COUNT
+	)
+	var oldest: int = RecordingManager.get_oldest_slot_index() if should_warn else -1
+	for slot_idx in _slot_lightpoints:
+		var lp = _slot_lightpoints[slot_idx]
+		if is_instance_valid(lp) and lp.has_method("set_fifo_warning"):
+			lp.set_fifo_warning(slot_idx == oldest)
 
 
 # === LightPoint 玩家進出偵測（M6）===

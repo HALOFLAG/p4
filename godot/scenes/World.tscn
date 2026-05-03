@@ -12,6 +12,7 @@
 [ext_resource type="Script" uid="uid://b5ss3aoo8h5go" path="res://scripts/Exit.gd" id="10_exit"]
 [ext_resource type="Script" uid="uid://bhheffd4nrd7o" path="res://scripts/Hazard.gd" id="11_hazard"]
 [ext_resource type="Script" uid="uid://c1j122n65b364" path="res://scripts/PressCounter.gd" id="12_counter"]
+[ext_resource type="PackedScene" path="res://scenes/Teleporter.tscn" id="13_i4b1j"]
 [ext_resource type="AudioStream" uid="uid://bhdttxc2rbi6q" path="res://audio/bgm/title.mp3" id="13_world_bgm"]
 
 [sub_resource type="RectangleShape2D" id="floor_left300"]
@@ -174,6 +175,10 @@ shape = SubResource("plat_top_exit")
 [node name="Checkpoint" parent="Room1" unique_id=1240237553 instance=ExtResource("6_cp")]
 position = Vector2(120, 624)
 
+[node name="Sign" parent="Room1" unique_id=1472963867 instance=ExtResource("7_sign")]
+position = Vector2(280, 600)
+text = "按 LMB → 走幾步 → 再按 LMB → 按 RMB 看看會發生什麼"
+
 [node name="Room2" parent="." unique_id=89602540 instance=ExtResource("5_room")]
 position = Vector2(1280, -1)
 
@@ -299,7 +304,7 @@ position = Vector2(80, 624)
 
 [node name="Sign" parent="Room3" unique_id=192230883 instance=ExtResource("7_sign")]
 position = Vector2(842, 607)
-text = "按R走到按鈕站著 → 按R結束 → 按 1 召喚"
+text = "按R走到按鈕站著 → 按R結束 → 按 RMB/E 重現"
 
 [node name="Button" type="Area2D" parent="Room3" unique_id=1800703467]
 position = Vector2(220, 645)
@@ -355,7 +360,7 @@ position = Vector2(80, 624)
 
 [node name="Sign" parent="Room4" unique_id=1375983891 instance=ExtResource("7_sign")]
 position = Vector2(661, 293)
-text = "需要兩個分身同時按住兩邊按鈕"
+text = "你需要兩個過去的自己同時按住兩邊"
 
 [node name="L1" type="StaticBody2D" parent="Room4" unique_id=1940325118]
 position = Vector2(666, 359)
@@ -593,6 +598,12 @@ door_path = NodePath("../Door")
 label_path = NodePath("../CounterLabel")
 track_all_buttons = true
 reset_on_checkpoint = true
+
+[node name="Teleporter" parent="Room6" unique_id=234624563 instance=ExtResource("13_i4b1j")]
+position = Vector2(838, 586)
+
+[node name="Teleporter2" parent="Room6" unique_id=1600199034 instance=ExtResource("13_i4b1j")]
+position = Vector2(-4512, 513)
 
 [node name="DeathBand" type="Area2D" parent="." unique_id=672218696]
 position = Vector2(2560, 850)

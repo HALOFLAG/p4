@@ -39,7 +39,7 @@ func _on_body_entered(body: Node2D) -> void:
 		pressed_changed.emit(true)
 		_animate_press(PRESS_DEPTH)
 		GameStats.button_press_count += 1
-		AudioManager.play_sfx("button_press")
+		AudioManager.play_sfx_at("button_press", global_position)
 		print("[BUTTON] 按下")
 
 

@@ -5,11 +5,18 @@ extends Node
 # 對應實作用規格書 S4
 
 # === 時間常數 ===
-const PAUSE_TIME := 0.3              # M10: 0.2 → 0.3
-const FADE_TIME := 0.3               # 各階段 fade 共用
-const BODY_FROZEN_ALPHA := 0.5
-const PROXY_SIDE_OFFSET := 50.0      # 分身朝面向方向的偏移
+const PAUSE_TIME := 0.3              # Phase 1: 暫停 + letterbox slide-in
+const FADE_TIME := 0.3               # 結束儀式 / abort 收 letterbox 用
+const BODY_FROZEN_ALPHA := 0.2       # 0.5 → 0.2：proxy 與 body 同位後 proxy 更突出
 const BODY_NORMAL_COLOR := Color(1, 1, 1, 1.0)
+
+# === C1 雙影分裂回合（取代 50px 側位移）===
+# 按 R 後從 proxy 位置朝 ±X 展開兩道殘影、再收回中央合併成 proxy
+# proxy 與 body 始終在同位置，玩家不被搬動，但保留「分裂 → 統合」的視覺事件
+const SPLIT_GHOST_OFFSET := 28.0     # 兩道殘影朝兩側展開距離
+const SPLIT_EXPAND_TIME := 0.2       # Phase 2a：展開時長
+const SPLIT_MERGE_TIME := 0.2        # Phase 2b：收回 + proxy 顯形 + body 淡退
+const SPLIT_GHOST_PEAK_ALPHA := 0.55 # 殘影最亮 α
 
 # === Letterbox 黑邊 ===
 const LETTERBOX_HEIGHT := 40.0       # 上下黑邊各 40px（細邊 cinematic）
@@ -27,7 +34,8 @@ const BRUSH_PARTICLE_AMOUNT := 14
 const BRUSH_PARTICLE_LIFETIME := 0.4
 
 # === 分身擦過本體的本體 tint flash ===
-const BRUSH_TINT_COLOR := Color(0.6, 0.85, 1.0, BODY_FROZEN_ALPHA)
+# alpha 必須高於 BODY_FROZEN_ALPHA 才看得到 flash（0.6 > 0.2）
+const BRUSH_TINT_COLOR := Color(0.6, 0.85, 1.0, 0.6)
 const BRUSH_TINT_TIME := 0.3
 
 var _canvas_layer: CanvasLayer
@@ -96,52 +104,85 @@ func _play_body_tint_flash(body) -> void:
 	_brush_tint_tween.tween_property(body, "modulate", frozen_white, BRUSH_TINT_TIME * 0.7)
 
 
-# === 進入錄製儀式 0.6s ===
+# === 進入錄製儀式 ~0.7s（C1 雙影分裂回合）===
 # 時間軸：
-#   0.0-0.3s  暫停世界、粒子爆散、letterbox slide-in（並行）
+#   0.0-0.3s  Phase 1：暫停世界、粒子爆散、letterbox slide-in
 #   0.3s      解除暫停
-#   0.3-0.6s  本體淡到 0.5、proxy 淡入 + 朝面向側偏移
-#   0.6s      玩家恢復對 proxy 的控制
-func play_recording_start_ritual(body, proxy, animate_split: bool = true) -> void:
-	# 預備：proxy 不可見、停物理
-	var split_target: Vector2 = proxy.position
-	if animate_split:
-		var facing := 1
-		if "facing_dir" in body:
-			facing = body.facing_dir
-		split_target = proxy.position + Vector2(PROXY_SIDE_OFFSET * facing, 0)
+#   0.3-0.5s  Phase 2a：兩道殘影從 proxy 位置朝 ±X 展開、α 0 → 0.55
+#   0.5-0.7s  Phase 2b：殘影收回中央 + 淡出；proxy α 0 → 1.0；body α 1.0 → 0.2
+#   0.7s      proxy 與 body 同位重合、玩家恢復對 proxy 控制
+#
+# 取消原 50px 側位移：proxy 全程停在原位、玩家不會感覺被搬動。
+# 新錄製 / 重錄共用同一儀式（原 animate_split 參數移除）。
+func play_recording_start_ritual(body, proxy) -> void:
 	proxy.modulate.a = 0.0
 	proxy.set_physics_process(false)
 
-	# 粒子於 proxy 位置爆散（新錄製 = 本體位置；重錄 = LP 位置）
+	# 粒子於 proxy 位置爆散（既有特效保留）
 	_spawn_split_particles(proxy.global_position)
 
-	# Phase 1：暫停 + letterbox slide-in（並行）
+	# Phase 1：暫停 + letterbox slide-in
 	get_tree().paused = true
 	var phase1 := create_tween().set_parallel()
-	# 上黑邊向下滑入
 	phase1.tween_property(_letterbox_top, "offset_top", 0.0, PAUSE_TIME)
 	phase1.tween_property(_letterbox_top, "offset_bottom", LETTERBOX_HEIGHT, PAUSE_TIME)
-	# 下黑邊向上滑入
 	phase1.tween_property(_letterbox_bottom, "offset_top", -LETTERBOX_HEIGHT, PAUSE_TIME)
 	phase1.tween_property(_letterbox_bottom, "offset_bottom", 0.0, PAUSE_TIME)
 	await get_tree().create_timer(PAUSE_TIME, true).timeout
 	get_tree().paused = false
 
-	# Phase 2：本體淡 + proxy 淡入 + proxy 滑（0.3s）
-	var phase2 := create_tween().set_parallel()
-	phase2.tween_property(body, "modulate", Color(1, 1, 1, BODY_FROZEN_ALPHA), FADE_TIME)
-	phase2.tween_property(proxy, "modulate:a", 1.0, FADE_TIME)
-	if animate_split:
-		phase2.tween_property(proxy, "position", split_target, FADE_TIME)
-	await phase2.finished
+	# 預備兩道殘影（Polygon2D 視覺複製、無物理）
+	var center_pos: Vector2 = proxy.global_position
+	var visual := proxy.get_node("Visual") as Polygon2D
+	var parent_node: Node = proxy.get_parent()
+	var ghost_left := _spawn_ghost(parent_node, center_pos, visual)
+	var ghost_right := _spawn_ghost(parent_node, center_pos, visual)
 
-	# 更新 spawn_position 為 proxy 最終位置
+	# Phase 2a：殘影展開到 ±SPLIT_GHOST_OFFSET、α 0 → SPLIT_GHOST_PEAK_ALPHA
+	var phase2a := create_tween().set_parallel()
+	phase2a.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	phase2a.tween_property(ghost_left, "global_position:x", center_pos.x - SPLIT_GHOST_OFFSET, SPLIT_EXPAND_TIME)
+	phase2a.tween_property(ghost_right, "global_position:x", center_pos.x + SPLIT_GHOST_OFFSET, SPLIT_EXPAND_TIME)
+	phase2a.tween_property(ghost_left, "modulate:a", SPLIT_GHOST_PEAK_ALPHA, SPLIT_EXPAND_TIME)
+	phase2a.tween_property(ghost_right, "modulate:a", SPLIT_GHOST_PEAK_ALPHA, SPLIT_EXPAND_TIME)
+	await phase2a.finished
+
+	# Phase 2b：殘影收回中央 + 淡出；同時 proxy 顯形、body 淡退
+	var phase2b := create_tween().set_parallel()
+	phase2b.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	phase2b.tween_property(ghost_left, "global_position:x", center_pos.x, SPLIT_MERGE_TIME)
+	phase2b.tween_property(ghost_right, "global_position:x", center_pos.x, SPLIT_MERGE_TIME)
+	phase2b.tween_property(ghost_left, "modulate:a", 0.0, SPLIT_MERGE_TIME)
+	phase2b.tween_property(ghost_right, "modulate:a", 0.0, SPLIT_MERGE_TIME)
+	phase2b.tween_property(proxy, "modulate:a", 1.0, SPLIT_MERGE_TIME)
+	phase2b.tween_property(body, "modulate", Color(1, 1, 1, BODY_FROZEN_ALPHA), SPLIT_MERGE_TIME)
+	await phase2b.finished
+
+	# 清理殘影
+	if is_instance_valid(ghost_left):
+		ghost_left.queue_free()
+	if is_instance_valid(ghost_right):
+		ghost_right.queue_free()
+
+	# 更新 spawn_position 為 proxy 位置（無位移、即按 R 那一格）
 	if RecordingManager.current:
 		RecordingManager.current.spawn_position = proxy.position
 
-	# 0.6s 完成：玩家可控
+	# 玩家可控
 	proxy.set_physics_process(true)
+
+
+# 雙影輔助：以 source Polygon2D 為模板生成一個視覺殘影、附加到 parent
+# z_index = -1 讓殘影排在 proxy 之下，proxy 淡入時自然蓋過
+func _spawn_ghost(parent: Node, world_pos: Vector2, source: Polygon2D) -> Polygon2D:
+	var ghost := Polygon2D.new()
+	ghost.polygon = source.polygon
+	ghost.color = source.color
+	ghost.modulate = Color(1, 1, 1, 0.0)
+	ghost.z_index = -1
+	parent.add_child(ghost)
+	ghost.global_position = world_pos
+	return ghost
 
 
 # === 結束錄製儀式 ~0.7s ===

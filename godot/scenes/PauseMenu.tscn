@@ -26,9 +26,9 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -240.0
-offset_top = -210.0
+offset_top = -280.0
 offset_right = 240.0
-offset_bottom = 210.0
+offset_bottom = 280.0
 mouse_filter = 0
 theme_override_styles/panel = SubResource("frame_style")
 
@@ -102,11 +102,27 @@ horizontal_alignment = 2
 custom_minimum_size = Vector2(0, 24)
 mouse_filter = 2
 
+[node name="HelpToggleRow" type="HBoxContainer" parent="Frame/Margin/VBox"]
+mouse_filter = 2
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="HelpToggleCheck" type="CheckBox" parent="Frame/Margin/VBox/HelpToggleRow"]
+button_pressed = true
+theme_override_font_sizes/font_size = 18
+text = "操作提示"
+
 [node name="ResumeButton" type="Button" parent="Frame/Margin/VBox"]
 custom_minimum_size = Vector2(220, 48)
 size_flags_horizontal = 4
 theme_override_font_sizes/font_size = 22
 text = "繼續遊戲"
+
+[node name="MapButton" type="Button" parent="Frame/Margin/VBox"]
+custom_minimum_size = Vector2(220, 40)
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 18
+text = "地圖"
 
 [node name="MainMenuButton" type="Button" parent="Frame/Margin/VBox"]
 custom_minimum_size = Vector2(220, 40)

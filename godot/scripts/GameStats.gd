@@ -11,6 +11,18 @@ var recording_completed_count := 0   # 完成錄製次數（含 A3 自然存槽�
 var carcass_spawn_count := 0         # 物理殘骸生成次數
 var play_time_seconds := 0.0         # 遊戲時長（秒）
 
+# === 玩家設定（不在 reset() 內、跨重玩保留）===
+# 預設顯示 HUD 操作提示；玩家可在暫停選單關閉
+var show_help_label: bool = true
+signal show_help_label_changed(visible: bool)
+
+
+func set_show_help_label(visible: bool) -> void:
+	if show_help_label == visible:
+		return
+	show_help_label = visible
+	show_help_label_changed.emit(visible)
+
 
 func _process(delta: float) -> void:
 	play_time_seconds += delta

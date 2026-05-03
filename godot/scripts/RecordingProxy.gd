@@ -20,8 +20,12 @@ func _ready() -> void:
 	collision_mask = 1 + PhysicalCarcass.ALL_CARCASS_LAYERS
 
 
-# 覆寫：R 鍵 toggle—— 本體按 R 開始錄製、Proxy 按 R 結束錄製
-# 同一鍵切換狀態，PlayerController 內部根據 state 分流
+# 覆寫：錄製中的特殊鍵
+#   R / LMB（record action）= 結束錄製、存槽
+#   RMB / E（summon_all action）= 取消錄製、丟棄
+# summon_all 在錄製中本來就被 CloneSpawner 擋下、是 no-op、重新詮釋為「取消」零衝突
 func _handle_special_actions() -> void:
 	if Input.is_action_just_pressed("record"):
 		PlayerController.end_recording()
+	elif Input.is_action_just_pressed("summon_all"):
+		PlayerController.cancel_recording_by_user()

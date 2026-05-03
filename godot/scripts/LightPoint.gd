@@ -21,18 +21,36 @@ var state: State = State.BRIGHT
 var slot_index: int = -1
 
 @onready var visual: Polygon2D = $Visual
+@onready var slot_label: Label = $SlotLabel
+@onready var old_label: Label = $OldLabel
 
 var _pulse_tween: Tween
 
 
 func _ready() -> void:
+	# 加入 group 讓 MapOverlay 能掃出來繪製
+	add_to_group("light_point")
 	visual.color = BRIGHT_COLOR
 	visual.modulate.a = PULSE_MAX_ALPHA
+	# set_slot 可能在 _ready 之前被呼叫（PlayerController instantiate→set_slot→add_child）
+	# 此時 @onready 還沒解析、要在 _ready 內補上文字
+	if slot_index >= 0:
+		slot_label.text = str(slot_index + 1)
 	_start_pulse()
+
+
+# 由 PlayerController 在錄製狀態變化時呼叫；非 BRIGHT 強制隱藏 OLD
+func set_fifo_warning(is_oldest: bool) -> void:
+	if old_label == null:
+		return
+	old_label.visible = is_oldest and state == State.BRIGHT
 
 
 func set_slot(index: int) -> void:
 	slot_index = index
+	# 顯示 1-based 槽位編號（與 HUD「存檔 N」邏輯一致）
+	if slot_label != null:
+		slot_label.text = str(index + 1) if index >= 0 else ""
 
 
 func _start_pulse() -> void:
@@ -57,6 +75,11 @@ func convert_to_trace() -> void:
 	state = State.TRACE
 	slot_index = -1
 	_stop_pulse()
+	# 痕跡光點不顯示槽位編號與 OLD 標記（已不屬於任何活躍槽位）
+	if slot_label != null:
+		slot_label.visible = false
+	if old_label != null:
+		old_label.visible = false
 
 	# 緩慢淡化成痕跡視覺：color 變灰、modulate.a 重置為 1（不再脈動）
 	var tween := create_tween().set_parallel()

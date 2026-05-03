@@ -141,17 +141,6 @@ func discard_recording() -> void:
 	print("[REC] 錄製已丟棄")
 
 
-# 向後兼容：HUD/CloneSpawner 等舊程式碼可能用 recordings
-# 回傳所有非空槽位的 Recording（陣列）
-var recordings: Array[Recording]:
-	get:
-		var arr: Array[Recording] = []
-		for s in slots:
-			if s != null:
-				arr.append(s)
-		return arr
-
-
 func _find_empty_slot() -> int:
 	for i in range(SLOT_COUNT):
 		if slots[i] == null:

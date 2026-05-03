@@ -1,15 +1,56 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scripts/TitleScreen.gd" id="1_title"]
 [ext_resource type="AudioStream" path="res://audio/bgm/world.mp3" id="2_title_bgm"]
 
+[sub_resource type="Shader" id="bg_shader"]
+code = "shader_type canvas_item;
+
+// 對應 HTML 設計：
+// radial-gradient(ellipse 80% 60% at 30% 30%, #2C334D 0%, #1A2138 35%, #0D1019 70%, #0D1019 100%)
+
+void fragment() {
+	vec2 center = vec2(0.30, 0.30);
+	vec2 radii = vec2(0.80, 0.60);
+	vec2 d = (UV - center) / radii;
+	float r = length(d);
+
+	vec3 c1 = vec3(0.1725, 0.2000, 0.3020); // #2C334D
+	vec3 c2 = vec3(0.1020, 0.1294, 0.2196); // #1A2138
+	vec3 c3 = vec3(0.0510, 0.0627, 0.0980); // #0D1019
+
+	vec3 col;
+	if (r < 0.35) {
+		col = mix(c1, c2, r / 0.35);
+	} else if (r < 0.70) {
+		col = mix(c2, c3, (r - 0.35) / 0.35);
+	} else {
+		col = c3;
+	}
+	COLOR = vec4(col, 1.0);
+}
+"
+
+[sub_resource type="ShaderMaterial" id="bg_material"]
+shader = SubResource("bg_shader")
+
 [sub_resource type="StyleBoxFlat" id="settings_frame"]
-bg_color = Color(0, 0, 0, 0.95)
-border_width_left = 3
-border_width_top = 3
-border_width_right = 3
-border_width_bottom = 3
-border_color = Color(1, 1, 1, 1)
+bg_color = Color(0.051, 0.063, 0.098, 0.95)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.541, 0.576, 0.659, 1)
+
+[sub_resource type="StyleBoxEmpty" id="empty_btn_bg"]
+
+[sub_resource type="StyleBoxFlat" id="back_btn_normal"]
+bg_color = Color(0, 0, 0, 0)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.541, 0.576, 0.659, 1)
 
 [node name="TitleScreen" type="Control"]
 anchor_right = 1.0
@@ -17,12 +58,58 @@ anchor_bottom = 1.0
 mouse_filter = 0
 script = ExtResource("1_title")
 
+;
+; ===== 背景：深色基底 + 放射漸層 shader =====
+;
 [node name="Background" type="ColorRect" parent="."]
+material = SubResource("bg_material")
 anchor_right = 1.0
 anchor_bottom = 1.0
 mouse_filter = 2
-color = Color(0.05, 0.06, 0.1, 1)
+color = Color(0.051, 0.063, 0.098, 1)
 
+;
+; ===== 粒子（兩層：月白 + 微藍）=====
+;
+[node name="Particles" type="Node2D" parent="."]
+
+[node name="ParticlesWhite" type="CPUParticles2D" parent="Particles"]
+position = Vector2(640, 740)
+amount = 45
+lifetime = 11.0
+preprocess = 8.0
+randomness = 0.5
+emission_shape = 3
+emission_rect_extents = Vector2(640, 20)
+direction = Vector2(0, -1)
+spread = 25.0
+gravity = Vector2(0, 0)
+initial_velocity_min = 10.0
+initial_velocity_max = 35.0
+scale_amount_min = 0.4
+scale_amount_max = 1.4
+color = Color(0.957, 0.945, 0.91, 0.45)
+
+[node name="ParticlesBlue" type="CPUParticles2D" parent="Particles"]
+position = Vector2(640, 740)
+amount = 5
+lifetime = 11.0
+preprocess = 8.0
+randomness = 0.5
+emission_shape = 3
+emission_rect_extents = Vector2(640, 20)
+direction = Vector2(0, -1)
+spread = 25.0
+gravity = Vector2(0, 0)
+initial_velocity_min = 10.0
+initial_velocity_max = 35.0
+scale_amount_min = 0.4
+scale_amount_max = 1.4
+color = Color(0.427, 0.706, 1.0, 0.45)
+
+;
+; ===== BGM =====
+;
 [node name="BGMPlayer" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("2_title_bgm")
 autoplay = true
@@ -30,76 +117,105 @@ autoplay = true
 ;
 ; ===================== 主選單 =====================
 ;
-
 [node name="MainPanel" type="Control" parent="."]
 anchor_right = 1.0
 anchor_bottom = 1.0
 mouse_filter = 2
 
-[node name="VBox" type="VBoxContainer" parent="MainPanel"]
+;
+; --- 標題列：餘響 — Lingering Echo（水平置中、上方 22%）---
+;
+[node name="TitleRow" type="HBoxContainer" parent="MainPanel"]
+modulate = Color(1, 1, 1, 0)
+anchor_left = 0.5
+anchor_top = 0.22
+anchor_right = 0.5
+anchor_bottom = 0.22
+offset_left = -380.0
+offset_top = -40.0
+offset_right = 380.0
+offset_bottom = 40.0
+mouse_filter = 2
+alignment = 1
+theme_override_constants/separation = 28
+
+[node name="TitleLabel" type="Label" parent="MainPanel/TitleRow"]
+modulate = Color(0.957, 0.945, 0.91, 1)
+theme_override_constants/outline_size = 0
+theme_override_font_sizes/font_size = 50
+theme_override_constants/letter_spacing = 10
+text = "餘響"
+vertical_alignment = 1
+
+[node name="Divider" type="ColorRect" parent="MainPanel/TitleRow"]
+custom_minimum_size = Vector2(80, 1)
+size_flags_vertical = 4
+mouse_filter = 2
+color = Color(0.541, 0.576, 0.659, 0.4)
+
+[node name="SubtitleLabel" type="Label" parent="MainPanel/TitleRow"]
+modulate = Color(0.541, 0.576, 0.659, 1)
+theme_override_font_sizes/font_size = 50
+theme_override_constants/letter_spacing = 4
+text = "Lingering Echo"
+vertical_alignment = 1
+
+;
+; --- 按鈕區：水平置中、垂直置中（50%）---
+;
+[node name="Buttons" type="VBoxContainer" parent="MainPanel"]
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -200.0
-offset_top = -180.0
-offset_right = 200.0
-offset_bottom = 180.0
+offset_left = -110.0
+offset_top = -88.0
+offset_right = 110.0
+offset_bottom = 88.0
 mouse_filter = 2
-theme_override_constants/separation = 24
-alignment = 1
+theme_override_constants/separation = 16
 
-[node name="Title" type="Label" parent="MainPanel/VBox"]
-theme_override_font_sizes/font_size = 72
-text = "haloflag P4"
-horizontal_alignment = 1
-
-[node name="Subtitle" type="Label" parent="MainPanel/VBox"]
-modulate = Color(0.6, 0.6, 0.7, 1)
-theme_override_font_sizes/font_size = 18
-text = "原型 demo"
-horizontal_alignment = 1
-
-[node name="Spacer" type="Control" parent="MainPanel/VBox"]
-custom_minimum_size = Vector2(0, 40)
-mouse_filter = 2
-
-[node name="StartButton" type="Button" parent="MainPanel/VBox"]
+[node name="StartButton" type="Button" parent="MainPanel/Buttons"]
+modulate = Color(1, 1, 1, 0)
 custom_minimum_size = Vector2(220, 48)
-size_flags_horizontal = 4
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 22
 text = "開始遊戲"
 
-[node name="SettingsButton" type="Button" parent="MainPanel/VBox"]
+[node name="SettingsButton" type="Button" parent="MainPanel/Buttons"]
+modulate = Color(1, 1, 1, 0)
 custom_minimum_size = Vector2(220, 48)
-size_flags_horizontal = 4
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 22
 text = "設定"
 
-[node name="QuitButton" type="Button" parent="MainPanel/VBox"]
+[node name="QuitButton" type="Button" parent="MainPanel/Buttons"]
+modulate = Color(1, 1, 1, 0)
 custom_minimum_size = Vector2(220, 48)
-size_flags_horizontal = 4
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 22
 text = "離開"
 
 ;
 ; ===================== 設定面板 =====================
 ;
-
 [node name="SettingsPanel" type="Control" parent="."]
 visible = false
 anchor_right = 1.0
 anchor_bottom = 1.0
-mouse_filter = 2
+mouse_filter = 0
+
+[node name="Backdrop" type="ColorRect" parent="SettingsPanel"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 0
+color = Color(0.051, 0.063, 0.098, 0.75)
 
 [node name="Frame" type="Panel" parent="SettingsPanel"]
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -240.0
+offset_left = -180.0
 offset_top = -180.0
-offset_right = 240.0
+offset_right = 180.0
 offset_bottom = 180.0
 mouse_filter = 0
 theme_override_styles/panel = SubResource("settings_frame")
@@ -108,74 +224,98 @@ theme_override_styles/panel = SubResource("settings_frame")
 anchor_right = 1.0
 anchor_bottom = 1.0
 mouse_filter = 2
-theme_override_constants/margin_left = 30
-theme_override_constants/margin_top = 30
-theme_override_constants/margin_right = 30
-theme_override_constants/margin_bottom = 30
+theme_override_constants/margin_left = 36
+theme_override_constants/margin_top = 32
+theme_override_constants/margin_right = 36
+theme_override_constants/margin_bottom = 32
 
 [node name="VBox" type="VBoxContainer" parent="SettingsPanel/Frame/Margin"]
 mouse_filter = 2
-theme_override_constants/separation = 18
+theme_override_constants/separation = 22
 
-[node name="Title" type="Label" parent="SettingsPanel/Frame/Margin/VBox"]
-theme_override_font_sizes/font_size = 32
+[node name="Header" type="HBoxContainer" parent="SettingsPanel/Frame/Margin/VBox"]
+mouse_filter = 2
+
+[node name="Title" type="Label" parent="SettingsPanel/Frame/Margin/VBox/Header"]
+modulate = Color(0.957, 0.945, 0.91, 1)
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 22
+theme_override_constants/letter_spacing = 6
 text = "設定"
-horizontal_alignment = 1
 
-[node name="Spacer1" type="Control" parent="SettingsPanel/Frame/Margin/VBox"]
-custom_minimum_size = Vector2(0, 12)
+[node name="CloseButton" type="Button" parent="SettingsPanel/Frame/Margin/VBox/Header"]
+modulate = Color(0.541, 0.576, 0.659, 1)
+custom_minimum_size = Vector2(28, 28)
+flat = true
+theme_override_font_sizes/font_size = 18
+text = "X"
+
+[node name="Divider1" type="ColorRect" parent="SettingsPanel/Frame/Margin/VBox"]
+custom_minimum_size = Vector2(0, 1)
+mouse_filter = 2
+color = Color(0.102, 0.129, 0.22, 1)
+
+[node name="MusicRow" type="VBoxContainer" parent="SettingsPanel/Frame/Margin/VBox"]
+mouse_filter = 2
+theme_override_constants/separation = 8
+
+[node name="MusicHeader" type="HBoxContainer" parent="SettingsPanel/Frame/Margin/VBox/MusicRow"]
 mouse_filter = 2
 
-[node name="MusicRow" type="HBoxContainer" parent="SettingsPanel/Frame/Margin/VBox"]
-mouse_filter = 2
-theme_override_constants/separation = 12
-
-[node name="MusicLabel" type="Label" parent="SettingsPanel/Frame/Margin/VBox/MusicRow"]
-custom_minimum_size = Vector2(80, 0)
-theme_override_font_sizes/font_size = 20
+[node name="MusicLabel" type="Label" parent="SettingsPanel/Frame/Margin/VBox/MusicRow/MusicHeader"]
+modulate = Color(0.541, 0.576, 0.659, 1)
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 14
+theme_override_constants/letter_spacing = 3
 text = "音樂"
 
+[node name="MusicValue" type="Label" parent="SettingsPanel/Frame/Margin/VBox/MusicRow/MusicHeader"]
+modulate = Color(0.541, 0.576, 0.659, 1)
+theme_override_font_sizes/font_size = 13
+text = "70%"
+horizontal_alignment = 2
+
 [node name="MusicSlider" type="HSlider" parent="SettingsPanel/Frame/Margin/VBox/MusicRow"]
-custom_minimum_size = Vector2(220, 30)
-size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 16)
 max_value = 1.0
 step = 0.01
 value = 0.7
 
-[node name="MusicValue" type="Label" parent="SettingsPanel/Frame/Margin/VBox/MusicRow"]
-custom_minimum_size = Vector2(60, 0)
-theme_override_font_sizes/font_size = 20
-text = "70%"
-horizontal_alignment = 2
-
-[node name="SFXRow" type="HBoxContainer" parent="SettingsPanel/Frame/Margin/VBox"]
+[node name="SFXRow" type="VBoxContainer" parent="SettingsPanel/Frame/Margin/VBox"]
 mouse_filter = 2
-theme_override_constants/separation = 12
+theme_override_constants/separation = 8
 
-[node name="SFXLabel" type="Label" parent="SettingsPanel/Frame/Margin/VBox/SFXRow"]
-custom_minimum_size = Vector2(80, 0)
-theme_override_font_sizes/font_size = 20
+[node name="SFXHeader" type="HBoxContainer" parent="SettingsPanel/Frame/Margin/VBox/SFXRow"]
+mouse_filter = 2
+
+[node name="SFXLabel" type="Label" parent="SettingsPanel/Frame/Margin/VBox/SFXRow/SFXHeader"]
+modulate = Color(0.541, 0.576, 0.659, 1)
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 14
+theme_override_constants/letter_spacing = 3
 text = "音效"
 
+[node name="SFXValue" type="Label" parent="SettingsPanel/Frame/Margin/VBox/SFXRow/SFXHeader"]
+modulate = Color(0.541, 0.576, 0.659, 1)
+theme_override_font_sizes/font_size = 13
+text = "70%"
+horizontal_alignment = 2
+
 [node name="SFXSlider" type="HSlider" parent="SettingsPanel/Frame/Margin/VBox/SFXRow"]
-custom_minimum_size = Vector2(220, 30)
-size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 16)
 max_value = 1.0
 step = 0.01
 value = 0.7
 
-[node name="SFXValue" type="Label" parent="SettingsPanel/Frame/Margin/VBox/SFXRow"]
-custom_minimum_size = Vector2(60, 0)
-theme_override_font_sizes/font_size = 20
-text = "70%"
-horizontal_alignment = 2
-
-[node name="Spacer2" type="Control" parent="SettingsPanel/Frame/Margin/VBox"]
-custom_minimum_size = Vector2(0, 24)
+[node name="Spacer" type="Control" parent="SettingsPanel/Frame/Margin/VBox"]
+custom_minimum_size = Vector2(0, 8)
 mouse_filter = 2
 
 [node name="BackButton" type="Button" parent="SettingsPanel/Frame/Margin/VBox"]
-custom_minimum_size = Vector2(160, 40)
-size_flags_horizontal = 4
-theme_override_font_sizes/font_size = 22
+custom_minimum_size = Vector2(0, 36)
+theme_override_font_sizes/font_size = 15
+theme_override_styles/normal = SubResource("back_btn_normal")
+theme_override_styles/hover = SubResource("back_btn_normal")
+theme_override_styles/pressed = SubResource("back_btn_normal")
+theme_override_styles/focus = SubResource("empty_btn_bg")
 text = "返回"

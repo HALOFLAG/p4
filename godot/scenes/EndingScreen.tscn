@@ -53,7 +53,7 @@ theme_override_constants/separation = 14
 
 [node name="TitleLabel" type="Label" parent="Frame/Margin/VBox"]
 theme_override_font_sizes/font_size = 56
-text = "通關"
+text = "終響"
 horizontal_alignment = 1
 
 [node name="Spacer1" type="Control" parent="Frame/Margin/VBox"]
@@ -79,7 +79,7 @@ size_flags_horizontal = 3
 
 [node name="I_Summon" type="Label" parent="Frame/Margin/VBox/StatsGrid"]
 theme_override_font_sizes/font_size = 24
-text = "召喚分身："
+text = "重現："
 horizontal_alignment = 2
 size_flags_horizontal = 3
 
@@ -90,7 +90,7 @@ size_flags_horizontal = 3
 
 [node name="I_Recorded" type="Label" parent="Frame/Margin/VBox/StatsGrid"]
 theme_override_font_sizes/font_size = 24
-text = "完成錄製："
+text = "留下："
 horizontal_alignment = 2
 size_flags_horizontal = 3
 
@@ -101,7 +101,7 @@ size_flags_horizontal = 3
 
 [node name="I_Carcass" type="Label" parent="Frame/Margin/VBox/StatsGrid"]
 theme_override_font_sizes/font_size = 24
-text = "物理殘骸："
+text = "餘骸："
 horizontal_alignment = 2
 size_flags_horizontal = 3
 
