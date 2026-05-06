@@ -1,0 +1,90 @@
+[gd_scene load_steps=11 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/Room.tscn" id="1_room"]
+[ext_resource type="PackedScene" path="res://scenes/Checkpoint.tscn" id="2_cp"]
+[ext_resource type="PackedScene" path="res://scenes/Sign.tscn" id="3_sign"]
+[ext_resource type="PackedScene" path="res://scenes/components/PressButton.tscn" id="4_btn"]
+[ext_resource type="PackedScene" path="res://scenes/components/Door.tscn" id="5_door"]
+[ext_resource type="PackedScene" path="res://scenes/components/Exit.tscn" id="6_exit"]
+[ext_resource type="Script" path="res://scripts/PressCounter.gd" id="7_counter"]
+[ext_resource type="PackedScene" path="res://scenes/Teleporter.tscn" id="8_tp"]
+
+[sub_resource type="RectangleShape2D" id="floor_full"]
+size = Vector2(1280, 40)
+
+[sub_resource type="RectangleShape2D" id="wall_shape"]
+size = Vector2(40, 600)
+
+[node name="demo_room6" instance=ExtResource("1_room")]
+
+[node name="Floor" type="StaticBody2D" parent="."]
+position = Vector2(640, 680)
+
+[node name="Visual" type="Polygon2D" parent="Floor"]
+color = Color(0.4, 0.4, 0.45, 1)
+polygon = PackedVector2Array(-640, -20, 640, -20, 640, 20, -640, 20)
+
+[node name="Collision" type="CollisionShape2D" parent="Floor"]
+shape = SubResource("floor_full")
+
+[node name="Ceiling" type="StaticBody2D" parent="."]
+position = Vector2(640, 40)
+
+[node name="Visual" type="Polygon2D" parent="Ceiling"]
+color = Color(0.4, 0.4, 0.45, 1)
+polygon = PackedVector2Array(-640, -20, 640, -20, 640, 20, -640, 20)
+
+[node name="Collision" type="CollisionShape2D" parent="Ceiling"]
+shape = SubResource("floor_full")
+
+[node name="RightWall" type="StaticBody2D" parent="."]
+position = Vector2(1260, 360)
+
+[node name="Visual" type="Polygon2D" parent="RightWall"]
+color = Color(0.4, 0.4, 0.45, 1)
+polygon = PackedVector2Array(-20, -300, 20, -300, 20, 300, -20, 300)
+
+[node name="Collision" type="CollisionShape2D" parent="RightWall"]
+shape = SubResource("wall_shape")
+
+[node name="Checkpoint" parent="." instance=ExtResource("2_cp")]
+position = Vector2(120, 624)
+
+[node name="Sign" parent="." instance=ExtResource("3_sign")]
+position = Vector2(541, 600)
+text = "踩按鈕 50 次開門！"
+
+[node name="Button1" parent="." instance=ExtResource("4_btn")]
+position = Vector2(380, 645)
+
+[node name="Button2" parent="." instance=ExtResource("4_btn")]
+position = Vector2(700, 645)
+
+[node name="CounterLabel" type="Label" parent="."]
+offset_left = 440.0
+offset_top = 100.0
+offset_right = 840.0
+offset_bottom = 160.0
+theme_override_font_sizes/font_size = 36
+text = "0 / 50"
+horizontal_alignment = 1
+
+[node name="Door" parent="." instance=ExtResource("5_door")]
+position = Vector2(1000, 460)
+
+[node name="Exit" parent="." instance=ExtResource("6_exit")]
+position = Vector2(1180, 620)
+
+[node name="PressCounter" type="Node" parent="."]
+script = ExtResource("7_counter")
+target_count = 50
+door_path = NodePath("../Door")
+label_path = NodePath("../CounterLabel")
+track_all_buttons = true
+reset_on_checkpoint = true
+
+[node name="Teleporter" parent="." instance=ExtResource("8_tp")]
+position = Vector2(838, 586)
+
+[node name="Teleporter2" parent="." instance=ExtResource("8_tp")]
+position = Vector2(-4512, 513)

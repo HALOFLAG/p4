@@ -1,0 +1,18 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/PressButton.gd" id="1_btn"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_btn"]
+size = Vector2(60, 30)
+
+[node name="PressButton" type="Area2D"]
+collision_layer = 0
+collision_mask = 3
+script = ExtResource("1_btn")
+
+[node name="Visual" type="Polygon2D" parent="."]
+color = Color(0.85, 0.6, 0.2, 1)
+polygon = PackedVector2Array(-30, -10, 30, -10, 30, 10, -30, 10)
+
+[node name="Collision" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_btn")

@@ -1,0 +1,18 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/Exit.gd" id="1_exit"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_exit"]
+size = Vector2(80, 100)
+
+[node name="Exit" type="Area2D"]
+collision_layer = 0
+collision_mask = 3
+script = ExtResource("1_exit")
+
+[node name="Visual" type="Polygon2D" parent="."]
+color = Color(0.3, 0.7, 0.4, 0.5)
+polygon = PackedVector2Array(-40, -50, 40, -50, 40, 50, -40, 50)
+
+[node name="Collision" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_exit")

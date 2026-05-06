@@ -1,0 +1,94 @@
+[gd_scene load_steps=10 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/Room.tscn" id="1_room"]
+[ext_resource type="PackedScene" path="res://scenes/Checkpoint.tscn" id="2_cp"]
+[ext_resource type="PackedScene" path="res://scenes/Sign.tscn" id="3_sign"]
+[ext_resource type="PackedScene" path="res://scenes/components/PressButton.tscn" id="4_btn"]
+[ext_resource type="PackedScene" path="res://scenes/components/Door.tscn" id="5_door"]
+
+[sub_resource type="RectangleShape2D" id="plat_entry"]
+size = Vector2(280, 30)
+
+[sub_resource type="RectangleShape2D" id="plat_short"]
+size = Vector2(197, 30)
+
+[sub_resource type="RectangleShape2D" id="floor_right400"]
+size = Vector2(400, 40)
+
+[sub_resource type="RectangleShape2D" id="floor_full"]
+size = Vector2(1280, 40)
+
+[node name="demo_room2" instance=ExtResource("1_room")]
+
+[node name="EntryPlat" type="StaticBody2D" parent="."]
+position = Vector2(141, 342)
+
+[node name="Visual" type="Polygon2D" parent="EntryPlat"]
+color = Color(0.5, 0.5, 0.55, 1)
+polygon = PackedVector2Array(-140, -15, 140, -15, 140, 15, -140, 15)
+
+[node name="Collision" type="CollisionShape2D" parent="EntryPlat"]
+shape = SubResource("plat_entry")
+
+[node name="Step1" type="StaticBody2D" parent="."]
+position = Vector2(386, 404)
+
+[node name="Visual" type="Polygon2D" parent="Step1"]
+color = Color(0.45, 0.45, 0.5, 1)
+polygon = PackedVector2Array(-100, -15, 100, -15, 100, 15, -100, 15)
+
+[node name="Collision" type="CollisionShape2D" parent="Step1"]
+shape = SubResource("plat_short")
+
+[node name="Step2" type="StaticBody2D" parent="."]
+position = Vector2(593, 492)
+
+[node name="Visual" type="Polygon2D" parent="Step2"]
+color = Color(0.45, 0.45, 0.5, 1)
+polygon = PackedVector2Array(-100, -15, 100, -15, 100, 15, -100, 15)
+
+[node name="Collision" type="CollisionShape2D" parent="Step2"]
+shape = SubResource("plat_short")
+
+[node name="Step3" type="StaticBody2D" parent="."]
+position = Vector2(799, 573)
+
+[node name="Visual" type="Polygon2D" parent="Step3"]
+color = Color(0.45, 0.45, 0.5, 1)
+polygon = PackedVector2Array(-100, -15, 100, -15, 100, 15, -100, 15)
+
+[node name="Collision" type="CollisionShape2D" parent="Step3"]
+shape = SubResource("plat_short")
+
+[node name="FloorRight" type="StaticBody2D" parent="."]
+position = Vector2(1080, 680)
+
+[node name="Visual" type="Polygon2D" parent="FloorRight"]
+color = Color(0.4, 0.4, 0.45, 1)
+polygon = PackedVector2Array(-200, -20, 200, -20, 200, 20, -200, 20)
+
+[node name="Collision" type="CollisionShape2D" parent="FloorRight"]
+shape = SubResource("floor_right400")
+
+[node name="Ceiling" type="StaticBody2D" parent="."]
+position = Vector2(640, 40)
+
+[node name="Visual" type="Polygon2D" parent="Ceiling"]
+color = Color(0.4, 0.4, 0.45, 1)
+polygon = PackedVector2Array(-640, -20, 640, -20, 640, 20, -640, 20)
+
+[node name="Collision" type="CollisionShape2D" parent="Ceiling"]
+shape = SubResource("floor_full")
+
+[node name="Checkpoint" parent="." instance=ExtResource("2_cp")]
+position = Vector2(95, 291)
+
+[node name="Sign" parent="." instance=ExtResource("3_sign")]
+position = Vector2(975, 506)
+text = "踩按鈕開門 → 把握時機跳過矮門"
+
+[node name="Button" parent="." instance=ExtResource("4_btn")]
+position = Vector2(1091, 645)
+
+[node name="Door2" parent="." instance=ExtResource("5_door")]
+position = Vector2(1193, 461)

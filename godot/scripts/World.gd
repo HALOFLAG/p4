@@ -15,16 +15,20 @@ const BGM_DUCK_DB := -10.0
 const BGM_DUCK_TIME := 0.05      # 進場：近瞬切，按 R 立刻降，不蓋過 record_start SFX
 const BGM_RECOVER_TIME := 0.4    # 出場：較緩，BGM 跟著結束儀式柔和回升
 
+# 地圖介面 BGM 衰減：開啟地圖時 BGM 持續播放但壓到 50% 音量（≈ -6 dB）
+const BGM_MAP_DUCK_DB := -6.02   # 20 * log10(0.5)，linear 50% 振幅
+const BGM_MAP_FADE_TIME := 0.2
+
 @onready var bgm_player: AudioStreamPlayer = $BGMPlayer
 var _bgm_duck_tween: Tween = null
-@onready var room2_button: PressButton = $Room2/Button
-@onready var room2_door: Door = $Room2/Door2
-@onready var room3_button: PressButton = $Room3/Button
-@onready var room3_door: Door = $Room3/Door
-@onready var room4_button_left: PressButton = $Room4/ButtonLeft
-@onready var room4_button_right: PressButton = $Room4/ButtonRight
-@onready var room4_door: Door = $Room4/Door
-@onready var room6_exit: Exit = $Room6/Exit
+@onready var room2_button: PressButton = $demo_room2/Button
+@onready var room2_door: Door = $demo_room2/Door2
+@onready var room3_button: PressButton = $demo_room3/Button
+@onready var room3_door: Door = $demo_room3/Door
+@onready var room4_button_left: PressButton = $demo_room4/ButtonLeft
+@onready var room4_button_right: PressButton = $demo_room4/ButtonRight
+@onready var room4_door: Door = $demo_room4/Door
+@onready var room6_exit: Exit = $demo_room6/Exit
 
 var _r4_left_pressed := false
 var _r4_right_pressed := false
@@ -35,10 +39,15 @@ func _ready() -> void:
 	if bgm_player.stream != null and "loop" in bgm_player.stream:
 		bgm_player.stream.loop = true
 	bgm_player.volume_db = BGM_NORMAL_DB
+	# BGM 跨 pause 持續播放（地圖開啟 / PauseMenu 開啟時都不會中斷音樂）
+	bgm_player.process_mode = Node.PROCESS_MODE_ALWAYS
 
 	# 錄製啟動 / 結束時 duck BGM
 	PlayerController.recording_started.connect(_on_recording_started)
 	PlayerController.recording_ended.connect(_on_recording_ended)
+	# 地圖開啟 / 關閉時 duck BGM 至 50%
+	PlayerController.map_opened.connect(_on_map_opened)
+	PlayerController.map_closed.connect(_on_map_closed)
 
 	room2_button.pressed_changed.connect(room2_door.set_target)
 	room3_button.pressed_changed.connect(room3_door.set_target)
@@ -70,11 +79,20 @@ func _on_recording_ended() -> void:
 	_tween_bgm_db(BGM_NORMAL_DB, BGM_RECOVER_TIME)
 
 
+func _on_map_opened() -> void:
+	_tween_bgm_db(BGM_MAP_DUCK_DB, BGM_MAP_FADE_TIME)
+
+
+func _on_map_closed() -> void:
+	_tween_bgm_db(BGM_NORMAL_DB, BGM_MAP_FADE_TIME)
+
+
 # Tween bgm_player.volume_db 不動 Music bus，使用者音量設定保留
+# Tween 綁在 bgm_player 上（process_mode = ALWAYS）、地圖開啟時 World 雖然 pause、tween 仍會跑
 func _tween_bgm_db(target_db: float, fade_time: float) -> void:
 	if _bgm_duck_tween != null and _bgm_duck_tween.is_valid():
 		_bgm_duck_tween.kill()
-	_bgm_duck_tween = create_tween()
+	_bgm_duck_tween = bgm_player.create_tween()
 	_bgm_duck_tween.tween_property(bgm_player, "volume_db", target_db, fade_time)
 
 

@@ -1,33 +1,31 @@
 @tool
-extends Area2D
-class_name Exit
+extends Hazard
+class_name HazardZone
 
-# 出口偵測：只有「真正的玩家」進入才算通關，分身路過不觸發
-# 用 group "player_real" 區分：Player._ready 會 add_to_group，Clone 因為不呼叫 super._ready 自動不會在這 group
-# 元件化：@tool + @export size，Inspector 內可調出口大小
+# 矩形致死區：可在 Inspector 調整 size，編輯器內即時更新
+# 用於 death band（掉落致死）、岩漿、酸液等大面積危險區
+# 視覺有半透明色塊；要隱形（如世界邊界 death band）可把 visual color alpha 設 0
 
-signal reached
 
-@export var size: Vector2 = Vector2(80, 100):
+@export var size: Vector2 = Vector2(200, 40):
 	set(value):
 		size = value
 		_apply_size()
 
-@export var color: Color = Color(0.3, 0.7, 0.4, 0.5):
+@export var visual_color: Color = Color(0.85, 0.2, 0.25, 0.3):
 	set(value):
-		color = value
+		visual_color = value
 		var v := get_node_or_null("Visual") as Polygon2D
 		if v != null:
-			v.color = color
-
-var triggered := false
+			v.color = visual_color
 
 
 func _ready() -> void:
 	_apply_size()
 	if Engine.is_editor_hint():
 		return
-	body_entered.connect(_on_body_entered)
+	# Hazard.gd 會接 body_entered；不在 editor 跑
+	super._ready()
 
 
 func _apply_size() -> void:
@@ -47,12 +45,3 @@ func _apply_size() -> void:
 		var rect := RectangleShape2D.new()
 		rect.size = size
 		c.shape = rect
-
-
-func _on_body_entered(body: Node2D) -> void:
-	if triggered:
-		return
-	if body.is_in_group("player_real"):
-		triggered = true
-		reached.emit()
-		print("[EXIT] 玩家到達出口")

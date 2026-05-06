@@ -1,0 +1,148 @@
+[gd_scene load_steps=10 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/Room.tscn" id="1_room"]
+[ext_resource type="PackedScene" path="res://scenes/Checkpoint.tscn" id="2_cp"]
+[ext_resource type="PackedScene" path="res://scenes/Sign.tscn" id="3_sign"]
+[ext_resource type="PackedScene" path="res://scenes/components/PressButton.tscn" id="4_btn"]
+[ext_resource type="PackedScene" path="res://scenes/components/Door.tscn" id="5_door"]
+
+[sub_resource type="RectangleShape2D" id="floor_full"]
+size = Vector2(1280, 40)
+
+[sub_resource type="RectangleShape2D" id="plat_short"]
+size = Vector2(197, 30)
+
+[sub_resource type="RectangleShape2D" id="plat_button_240"]
+size = Vector2(240, 30)
+
+[sub_resource type="RectangleShape2D" id="wall_shape"]
+size = Vector2(40, 600)
+
+[node name="demo_room4" instance=ExtResource("1_room")]
+
+[node name="Floor" type="StaticBody2D" parent="."]
+position = Vector2(640, 680)
+
+[node name="Visual" type="Polygon2D" parent="Floor"]
+color = Color(0.4, 0.4, 0.45, 1)
+polygon = PackedVector2Array(-640, -20, 640, -20, 640, 20, -640, 20)
+
+[node name="Collision" type="CollisionShape2D" parent="Floor"]
+shape = SubResource("floor_full")
+
+[node name="Ceiling" type="StaticBody2D" parent="."]
+position = Vector2(640, 40)
+
+[node name="Visual" type="Polygon2D" parent="Ceiling"]
+color = Color(0.4, 0.4, 0.45, 1)
+polygon = PackedVector2Array(-640, -20, 640, -20, 640, 20, -640, 20)
+
+[node name="Collision" type="CollisionShape2D" parent="Ceiling"]
+shape = SubResource("floor_full")
+
+[node name="Checkpoint" parent="." instance=ExtResource("2_cp")]
+position = Vector2(80, 624)
+
+[node name="Sign" parent="." instance=ExtResource("3_sign")]
+position = Vector2(661, 293)
+text = "你需要兩個過去的自己同時按住兩邊"
+
+[node name="L1" type="StaticBody2D" parent="."]
+position = Vector2(666, 359)
+
+[node name="Visual" type="Polygon2D" parent="L1"]
+color = Color(0.45, 0.45, 0.5, 1)
+polygon = PackedVector2Array(-100, -15, 100, -15, 100, 15, -100, 15)
+
+[node name="Collision" type="CollisionShape2D" parent="L1"]
+shape = SubResource("plat_short")
+
+[node name="L2" type="StaticBody2D" parent="."]
+position = Vector2(478, 509)
+
+[node name="Visual" type="Polygon2D" parent="L2"]
+color = Color(0.45, 0.45, 0.5, 1)
+polygon = PackedVector2Array(-100, -15, 100, -15, 100, 15, -100, 15)
+
+[node name="Collision" type="CollisionShape2D" parent="L2"]
+shape = SubResource("plat_short")
+
+[node name="L3" type="StaticBody2D" parent="."]
+position = Vector2(328, 438)
+
+[node name="Visual" type="Polygon2D" parent="L3"]
+color = Color(0.45, 0.45, 0.5, 1)
+polygon = PackedVector2Array(-100, -15, 100, -15, 100, 15, -100, 15)
+
+[node name="Collision" type="CollisionShape2D" parent="L3"]
+shape = SubResource("plat_short")
+
+[node name="L4Btn" type="StaticBody2D" parent="."]
+position = Vector2(121, 365)
+
+[node name="Visual" type="Polygon2D" parent="L4Btn"]
+color = Color(0.5, 0.5, 0.55, 1)
+polygon = PackedVector2Array(-120, -15, 120, -15, 120, 15, -120, 15)
+
+[node name="Collision" type="CollisionShape2D" parent="L4Btn"]
+shape = SubResource("plat_button_240")
+
+[node name="ButtonLeft" parent="." instance=ExtResource("4_btn")]
+position = Vector2(140, 335)
+
+[node name="R1" type="StaticBody2D" parent="."]
+position = Vector2(730, 582)
+
+[node name="Visual" type="Polygon2D" parent="R1"]
+color = Color(0.45, 0.45, 0.5, 1)
+polygon = PackedVector2Array(-100, -15, 100, -15, 100, 15, -100, 15)
+
+[node name="Collision" type="CollisionShape2D" parent="R1"]
+shape = SubResource("plat_short")
+
+[node name="R2" type="StaticBody2D" parent="."]
+position = Vector2(982, 511)
+
+[node name="Visual" type="Polygon2D" parent="R2"]
+color = Color(0.45, 0.45, 0.5, 1)
+polygon = PackedVector2Array(-100, -15, 100, -15, 100, 15, -100, 15)
+
+[node name="Collision" type="CollisionShape2D" parent="R2"]
+shape = SubResource("plat_short")
+
+[node name="R3" type="StaticBody2D" parent="."]
+position = Vector2(1141, 442)
+
+[node name="Visual" type="Polygon2D" parent="R3"]
+color = Color(0.45, 0.45, 0.5, 1)
+polygon = PackedVector2Array(-100, -15, 100, -15, 100, 15, -100, 15)
+
+[node name="Collision" type="CollisionShape2D" parent="R3"]
+shape = SubResource("plat_short")
+
+[node name="R4Btn" type="StaticBody2D" parent="."]
+position = Vector2(844, 390)
+
+[node name="Visual" type="Polygon2D" parent="R4Btn"]
+color = Color(0.5, 0.5, 0.55, 1)
+polygon = PackedVector2Array(-120, -15, 120, -15, 120, 15, -120, 15)
+
+[node name="Collision" type="CollisionShape2D" parent="R4Btn"]
+shape = SubResource("plat_button_240")
+
+[node name="ButtonRight" parent="." instance=ExtResource("4_btn")]
+position = Vector2(842, 360)
+
+[node name="Door" parent="." instance=ExtResource("5_door")]
+position = Vector2(1113, 459)
+
+[node name="r4 Wall" type="StaticBody2D" parent="."]
+position = Vector2(1258, 254)
+scale = Vector2(1, 0.68)
+
+[node name="Visual" type="Polygon2D" parent="r4 Wall"]
+color = Color(0.4, 0.4, 0.45, 1)
+polygon = PackedVector2Array(-20, -300, 20, -300, 20, 300, -20, 300)
+
+[node name="Collision" type="CollisionShape2D" parent="r4 Wall"]
+shape = SubResource("wall_shape")

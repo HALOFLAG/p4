@@ -1,0 +1,45 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/Room.tscn" id="1_room"]
+[ext_resource type="PackedScene" path="res://scenes/Checkpoint.tscn" id="2_cp"]
+[ext_resource type="PackedScene" path="res://scenes/Sign.tscn" id="3_sign"]
+[ext_resource type="PackedScene" path="res://scenes/components/PressButton.tscn" id="4_btn"]
+[ext_resource type="PackedScene" path="res://scenes/components/Door.tscn" id="5_door"]
+
+[sub_resource type="RectangleShape2D" id="floor_full"]
+size = Vector2(1280, 40)
+
+[node name="demo_room3" instance=ExtResource("1_room")]
+
+[node name="Floor" type="StaticBody2D" parent="."]
+position = Vector2(640, 680)
+
+[node name="Visual" type="Polygon2D" parent="Floor"]
+color = Color(0.4, 0.4, 0.45, 1)
+polygon = PackedVector2Array(-640, -20, 640, -20, 640, 20, -640, 20)
+
+[node name="Collision" type="CollisionShape2D" parent="Floor"]
+shape = SubResource("floor_full")
+
+[node name="Ceiling" type="StaticBody2D" parent="."]
+position = Vector2(640, 40)
+
+[node name="Visual" type="Polygon2D" parent="Ceiling"]
+color = Color(0.4, 0.4, 0.45, 1)
+polygon = PackedVector2Array(-640, -20, 640, -20, 640, 20, -640, 20)
+
+[node name="Collision" type="CollisionShape2D" parent="Ceiling"]
+shape = SubResource("floor_full")
+
+[node name="Checkpoint" parent="." instance=ExtResource("2_cp")]
+position = Vector2(80, 624)
+
+[node name="Sign" parent="." instance=ExtResource("3_sign")]
+position = Vector2(842, 607)
+text = "按R走到按鈕站著 → 按R結束 → 按 RMB/E 重現"
+
+[node name="Button" parent="." instance=ExtResource("4_btn")]
+position = Vector2(220, 645)
+
+[node name="Door" parent="." instance=ExtResource("5_door")]
+position = Vector2(1097, 465)
