@@ -11,6 +11,9 @@ signal player_off_lightpoint
 # 玩家進入 / 離開傳送門範圍（HUD 用來顯示「按 R 傳送」提示）
 signal player_on_teleporter(tp)
 signal player_off_teleporter
+# MapOverlay 開啟 / 關閉（World 訂閱來 duck BGM）
+signal map_opened
+signal map_closed
 # 錄製期間分身擦過本體（中心距離由「未重疊」變「重疊」時 emit 一次）
 # 參數：兩者中點的世界座標，給粒子等視覺效果用
 signal proxy_brushed_body(world_position: Vector2)
@@ -374,6 +377,16 @@ func _update_current_teleporter() -> void:
 # Player.gd R 鍵優先序判定用
 func get_current_teleporter() -> Teleporter:
 	return _current_teleporter
+
+
+# === MapOverlay 生命週期（World 訂閱來 duck BGM）===
+
+func notify_map_opened() -> void:
+	map_opened.emit()
+
+
+func notify_map_closed() -> void:
+	map_closed.emit()
 
 
 # 由 Player._handle_special_actions 呼叫；錄製中禁用

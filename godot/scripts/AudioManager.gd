@@ -69,6 +69,32 @@ func _ensure_bus(bus_name: String) -> void:
 		AudioServer.set_bus_send(idx, "Master")
 
 
+# === Bus 音量控制（給 TitleScreen / PauseMenu slider 共用）===
+
+# 把 0.0-1.0 的 linear 振幅套到指定 bus；< 0.001 視為靜音（mute）、其他換 dB
+# 找不到 bus 名稱時 silently no-op（理論上不會發生、AudioManager._ready 已建好）
+func set_bus_volume_linear(bus_name: String, linear: float) -> void:
+	var idx := AudioServer.get_bus_index(bus_name)
+	if idx < 0:
+		return
+	if linear < 0.001:
+		AudioServer.set_bus_mute(idx, true)
+	else:
+		AudioServer.set_bus_mute(idx, false)
+		AudioServer.set_bus_volume_db(idx, linear_to_db(linear))
+
+
+# 從指定 bus 讀目前 linear 振幅（給 PauseMenu 開啟時把 slider 同步到當前音量用）
+# 找不到 bus 或 mute 時回傳 0；其他換算 db→linear、clamp 到 [0, 1]
+func get_bus_volume_linear(bus_name: String) -> float:
+	var idx := AudioServer.get_bus_index(bus_name)
+	if idx < 0:
+		return 0.0
+	if AudioServer.is_bus_mute(idx):
+		return 0.0
+	return clamp(db_to_linear(AudioServer.get_bus_volume_db(idx)), 0.0, 1.0)
+
+
 # 播放命名 SFX；找不到名字時靜默（不爆 error）
 # volume_db_override：傳數字會**覆蓋** SFX_DEFAULT_DB 的預設、傳 INF 表示用預設
 # 一般情況直接呼叫 play_sfx("jump") 即可、它會自動套 SFX_DEFAULT_DB["jump"]

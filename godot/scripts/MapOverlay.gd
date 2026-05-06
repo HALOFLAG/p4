@@ -48,6 +48,8 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_compute_projection()
 	get_tree().paused = true
+	# 通知 PlayerController：World 收到後會 duck BGM 到 50%、保持音樂持續播放
+	PlayerController.notify_map_opened()
 	canvas.draw.connect(_draw_canvas)
 	label_label.visible = false
 	canvas.queue_redraw()
@@ -228,6 +230,7 @@ func _close(dest) -> void:
 		return
 	_selection_emitted = true
 	get_tree().paused = false
+	PlayerController.notify_map_closed()
 	destination_selected.emit(dest)
 	queue_free()
 

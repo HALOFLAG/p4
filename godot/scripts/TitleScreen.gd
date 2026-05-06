@@ -60,10 +60,8 @@ var _menu_buttons: Array[Button] = []
 
 
 func _ready() -> void:
-	_ensure_bus("Music")
-	_ensure_bus("SFX")
-
-	bgm_player.bus = "Music"
+	# Music / SFX bus 由 AudioManager autoload._ready 已建好、不需重複建
+	# bgm_player.bus 由 .tscn 設定為 "Music"
 	if bgm_player.stream != null and "loop" in bgm_player.stream:
 		bgm_player.stream.loop = true
 
@@ -86,9 +84,9 @@ func _ready() -> void:
 	music_slider.value = DEFAULT_MUSIC_VOLUME
 	sfx_slider.value = DEFAULT_SFX_VOLUME
 	# .tscn 的 slider 預設已是 0.7、上面 set 同值 → value_changed 不會觸發 → bus 停在 0 dB
-	# 強制呼叫一次 _apply_volume、確保 bus 真的被設到預設
-	_apply_volume("Music", DEFAULT_MUSIC_VOLUME)
-	_apply_volume("SFX", DEFAULT_SFX_VOLUME)
+	# 強制呼叫一次套用、確保 bus 真的被設到預設
+	AudioManager.set_bus_volume_linear("Music", DEFAULT_MUSIC_VOLUME)
+	AudioManager.set_bus_volume_linear("SFX", DEFAULT_SFX_VOLUME)
 
 	main_panel.visible = true
 	settings_panel.visible = false
@@ -219,16 +217,6 @@ func _spawn_ripple(btn: Button) -> void:
 	tw.chain().tween_callback(ripple.queue_free)
 
 
-# === Audio buses ===
-
-func _ensure_bus(bus_name: String) -> void:
-	if AudioServer.get_bus_index(bus_name) < 0:
-		AudioServer.add_bus()
-		var idx := AudioServer.bus_count - 1
-		AudioServer.set_bus_name(idx, bus_name)
-		AudioServer.set_bus_send(idx, "Master")
-
-
 # === 主選單 ===
 
 func _on_start_pressed() -> void:
@@ -258,21 +246,10 @@ func _on_back_pressed() -> void:
 
 
 func _on_music_changed(value: float) -> void:
-	_apply_volume("Music", value)
+	AudioManager.set_bus_volume_linear("Music", value)
 	music_value_label.text = "%d%%" % int(value * 100)
 
 
 func _on_sfx_changed(value: float) -> void:
-	_apply_volume("SFX", value)
+	AudioManager.set_bus_volume_linear("SFX", value)
 	sfx_value_label.text = "%d%%" % int(value * 100)
-
-
-func _apply_volume(bus_name: String, linear: float) -> void:
-	var idx := AudioServer.get_bus_index(bus_name)
-	if idx < 0:
-		return
-	if linear < 0.001:
-		AudioServer.set_bus_mute(idx, true)
-	else:
-		AudioServer.set_bus_mute(idx, false)
-		AudioServer.set_bus_volume_db(idx, linear_to_db(linear))

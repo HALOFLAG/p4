@@ -113,6 +113,7 @@ color = Color(0.427, 0.706, 1.0, 0.45)
 [node name="BGMPlayer" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("2_title_bgm")
 autoplay = true
+bus = "Music"
 
 ;
 ; ===================== 主選單 =====================

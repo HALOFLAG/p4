@@ -20,8 +20,8 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 
 	# Slider 從現有 bus volume 讀進來（玩家在 TitleScreen 調過的會延續）
-	music_slider.value = _read_bus_linear("Music")
-	sfx_slider.value = _read_bus_linear("SFX")
+	music_slider.value = AudioManager.get_bus_volume_linear("Music")
+	sfx_slider.value = AudioManager.get_bus_volume_linear("SFX")
 	music_value.text = "%d%%" % int(music_slider.value * 100)
 	sfx_value.text = "%d%%" % int(sfx_slider.value * 100)
 
@@ -49,34 +49,14 @@ func _input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 
-func _read_bus_linear(bus_name: String) -> float:
-	var idx := AudioServer.get_bus_index(bus_name)
-	if idx < 0:
-		return 0.7
-	if AudioServer.is_bus_mute(idx):
-		return 0.0
-	return clamp(db_to_linear(AudioServer.get_bus_volume_db(idx)), 0.0, 1.0)
-
-
 func _on_music_changed(v: float) -> void:
-	_apply_volume("Music", v)
+	AudioManager.set_bus_volume_linear("Music", v)
 	music_value.text = "%d%%" % int(v * 100)
 
 
 func _on_sfx_changed(v: float) -> void:
-	_apply_volume("SFX", v)
+	AudioManager.set_bus_volume_linear("SFX", v)
 	sfx_value.text = "%d%%" % int(v * 100)
-
-
-func _apply_volume(bus_name: String, linear: float) -> void:
-	var idx := AudioServer.get_bus_index(bus_name)
-	if idx < 0:
-		return
-	if linear < 0.001:
-		AudioServer.set_bus_mute(idx, true)
-	else:
-		AudioServer.set_bus_mute(idx, false)
-		AudioServer.set_bus_volume_db(idx, linear_to_db(linear))
 
 
 func _on_help_toggle_changed(pressed: bool) -> void:
