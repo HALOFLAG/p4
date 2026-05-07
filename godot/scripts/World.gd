@@ -1,9 +1,9 @@
 extends Node2D
 
 # World 主場景根節點（M10）
-# Room 2: 單按鈕→門
+# Room 2: 拉桿 → 門 + 觸發式平台（M13 測試：連線在 demo_room2.tscn 內）
 # Room 3: clone 按鈕→門
-# Room 4: 雙按鈕 AND-gate → 門
+# Room 4: 雙按鈕 AND-gate → 門（M13：邏輯由 demo_room4.tscn 內的 LogicGate Node 處理）
 # Room 6: PressCounter（50 次按鈕、跨房計算、碰旗幟重置）→ 門 → Exit
 #         Counter 與 Door 連接由 PressCounter inspector 處理，World.gd 只接 Exit
 
@@ -21,17 +21,9 @@ const BGM_MAP_FADE_TIME := 0.2
 
 @onready var bgm_player: AudioStreamPlayer = $BGMPlayer
 var _bgm_duck_tween: Tween = null
-@onready var room2_button: PressButton = $demo_room2/Button
-@onready var room2_door: Door = $demo_room2/Door2
 @onready var room3_button: PressButton = $demo_room3/Button
 @onready var room3_door: Door = $demo_room3/Door
-@onready var room4_button_left: PressButton = $demo_room4/ButtonLeft
-@onready var room4_button_right: PressButton = $demo_room4/ButtonRight
-@onready var room4_door: Door = $demo_room4/Door
 @onready var room6_exit: Exit = $demo_room6/Exit
-
-var _r4_left_pressed := false
-var _r4_right_pressed := false
 
 
 func _ready() -> void:
@@ -49,26 +41,10 @@ func _ready() -> void:
 	PlayerController.map_opened.connect(_on_map_opened)
 	PlayerController.map_closed.connect(_on_map_closed)
 
-	room2_button.pressed_changed.connect(room2_door.set_target)
+	# Room 2 連線：M13 測試起改由 demo_room2.tscn 內的 [connection] 處理
 	room3_button.pressed_changed.connect(room3_door.set_target)
-	room4_button_left.pressed_changed.connect(_on_r4_left_changed)
-	room4_button_right.pressed_changed.connect(_on_r4_right_changed)
+	# Room 4 AND-gate 連線：M13 起改由 demo_room4.tscn 內的 LogicGate Node 處理
 	room6_exit.reached.connect(_on_exit_reached)
-
-
-# Room 4 AND-gate：兩個按鈕都按住才開門
-func _on_r4_left_changed(p: bool) -> void:
-	_r4_left_pressed = p
-	_update_r4_door()
-
-
-func _on_r4_right_changed(p: bool) -> void:
-	_r4_right_pressed = p
-	_update_r4_door()
-
-
-func _update_r4_door() -> void:
-	room4_door.set_target(_r4_left_pressed and _r4_right_pressed)
 
 
 func _on_recording_started() -> void:

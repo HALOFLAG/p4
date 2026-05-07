@@ -1,0 +1,17 @@
+[gd_scene format=3 uid="uid://1uwfve06o5rm"]
+
+[ext_resource type="Script" uid="uid://c7q360evuym3l" path="res://scripts/TriggeredPlatform.gd" id="1_tplat"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_tplat"]
+size = Vector2(200, 30)
+
+[node name="TriggeredPlatform" type="AnimatableBody2D" unique_id=1440167434]
+script = ExtResource("1_tplat")
+movement = Vector2(250, 0)
+
+[node name="Visual" type="Polygon2D" parent="." unique_id=1450568302]
+color = Color(0.55, 0.45, 0.3, 1)
+polygon = PackedVector2Array(-100, -15, 100, -15, 100, 15, -100, 15)
+
+[node name="Collision" type="CollisionShape2D" parent="." unique_id=70945708]
+shape = SubResource("RectangleShape2D_tplat")

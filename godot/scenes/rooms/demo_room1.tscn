@@ -1,8 +1,9 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene format=3 uid="uid://c82luje50304g"]
 
 [ext_resource type="PackedScene" path="res://scenes/Room.tscn" id="1_room"]
 [ext_resource type="PackedScene" path="res://scenes/Checkpoint.tscn" id="2_cp"]
 [ext_resource type="PackedScene" path="res://scenes/Sign.tscn" id="3_sign"]
+[ext_resource type="PackedScene" path="res://scenes/components/CrumblingPlatform.tscn" id="4_cmb2w"]
 
 [sub_resource type="RectangleShape2D" id="floor_left300"]
 size = Vector2(439.5, 40)
@@ -19,112 +20,121 @@ size = Vector2(197, 30)
 [sub_resource type="RectangleShape2D" id="plat_top_exit"]
 size = Vector2(560, 30)
 
-[node name="demo_room1" instance=ExtResource("1_room")]
+[node name="demo_room1" unique_id=5435590 instance=ExtResource("1_room")]
 
-[node name="Floor" type="StaticBody2D" parent="."]
+[node name="Floor" type="StaticBody2D" parent="." index="2" unique_id=476674781]
 position = Vector2(150, 680)
 
-[node name="Visual" type="Polygon2D" parent="Floor"]
+[node name="Visual" type="Polygon2D" parent="Floor" index="0" unique_id=1875586476]
 position = Vector2(69, 0)
 scale = Vector2(1.46, 1)
 color = Color(0.4, 0.4, 0.45, 1)
 polygon = PackedVector2Array(-150, -20, 150, -20, 150, -1.6178894, 150, 20, -150, 20)
 
-[node name="Collision" type="CollisionShape2D" parent="Floor"]
+[node name="Collision" type="CollisionShape2D" parent="Floor" index="1" unique_id=410745818]
 position = Vector2(69.25, 0)
 shape = SubResource("floor_left300")
 
-[node name="Ceiling" type="StaticBody2D" parent="."]
+[node name="Ceiling" type="StaticBody2D" parent="." index="3" unique_id=33655762]
 position = Vector2(640, 40)
 
-[node name="Visual" type="Polygon2D" parent="Ceiling"]
+[node name="Visual" type="Polygon2D" parent="Ceiling" index="0" unique_id=1139933738]
 color = Color(0.4, 0.4, 0.45, 1)
 polygon = PackedVector2Array(-640, -20, 640, -20, 640, 20, -640, 20)
 
-[node name="Collision" type="CollisionShape2D" parent="Ceiling"]
+[node name="Collision" type="CollisionShape2D" parent="Ceiling" index="1" unique_id=1161492785]
 shape = SubResource("floor_full")
 
-[node name="LeftWall" type="StaticBody2D" parent="."]
+[node name="LeftWall" type="StaticBody2D" parent="." index="4" unique_id=1685961252]
 position = Vector2(20, 360)
 
-[node name="Visual" type="Polygon2D" parent="LeftWall"]
+[node name="Visual" type="Polygon2D" parent="LeftWall" index="0" unique_id=406553294]
 color = Color(0.4, 0.4, 0.45, 1)
 polygon = PackedVector2Array(-20, -300, 20, -300, 20, 300, -20, 300)
 
-[node name="Collision" type="CollisionShape2D" parent="LeftWall"]
+[node name="Collision" type="CollisionShape2D" parent="LeftWall" index="1" unique_id=1708376475]
 shape = SubResource("wall_shape")
 
-[node name="P1" type="StaticBody2D" parent="."]
+[node name="P1" type="StaticBody2D" parent="." index="5" unique_id=1172693896]
 position = Vector2(541, 601)
 
-[node name="Visual" type="Polygon2D" parent="P1"]
+[node name="Visual" type="Polygon2D" parent="P1" index="0" unique_id=844876643]
 color = Color(0.45, 0.45, 0.5, 1)
 polygon = PackedVector2Array(-100, -15, 100, -15, 100, 15, -100, 15)
 
-[node name="Collision" type="CollisionShape2D" parent="P1"]
+[node name="Collision" type="CollisionShape2D" parent="P1" index="1" unique_id=810328884]
 shape = SubResource("plat_short")
 
-[node name="P2" type="StaticBody2D" parent="."]
+[node name="P2" type="StaticBody2D" parent="." index="6" unique_id=1244243435]
 position = Vector2(333, 523)
 
-[node name="Visual" type="Polygon2D" parent="P2"]
+[node name="Visual" type="Polygon2D" parent="P2" index="0" unique_id=554577370]
 position = Vector2(-57, -5)
 color = Color(0.45, 0.45, 0.5, 1)
 polygon = PackedVector2Array(-100, -15, 83.77606, -15, 100, -15, 100, 15, -100, 15)
 
-[node name="Collision" type="CollisionShape2D" parent="P2"]
+[node name="Collision" type="CollisionShape2D" parent="P2" index="1" unique_id=640089175]
 position = Vector2(-55, -5)
 shape = SubResource("plat_short")
 
-[node name="P3" type="StaticBody2D" parent="."]
+[node name="P3" type="StaticBody2D" parent="." index="7" unique_id=1523558918]
 position = Vector2(461, 436)
 
-[node name="Visual" type="Polygon2D" parent="P3"]
+[node name="Visual" type="Polygon2D" parent="P3" index="0" unique_id=1965952913]
 position = Vector2(-336, -11)
 color = Color(0.45, 0.45, 0.5, 1)
 polygon = PackedVector2Array(-100, -15, 100, -15, 100, 15, -100, 15)
 
-[node name="Collision" type="CollisionShape2D" parent="P3"]
+[node name="Collision" type="CollisionShape2D" parent="P3" index="1" unique_id=1948348437]
 position = Vector2(-334.5, -11)
 shape = SubResource("plat_short")
 
-[node name="P4" type="StaticBody2D" parent="."]
+[node name="P4" type="StaticBody2D" parent="." index="8" unique_id=881004235]
 position = Vector2(257, 334)
 
-[node name="Visual" type="Polygon2D" parent="P4"]
+[node name="Visual" type="Polygon2D" parent="P4" index="0" unique_id=765226516]
 position = Vector2(160, 7)
 color = Color(0.45, 0.45, 0.5, 1)
 polygon = PackedVector2Array(-100, -15, 100, -15, 100, 15, -100, 15)
 
-[node name="Collision" type="CollisionShape2D" parent="P4"]
+[node name="Collision" type="CollisionShape2D" parent="P4" index="1" unique_id=864529239]
 position = Vector2(158, 7)
 shape = SubResource("plat_short")
 
-[node name="P5" type="StaticBody2D" parent="."]
+[node name="P5" type="StaticBody2D" parent="." index="9" unique_id=893793548]
 position = Vector2(500, 280)
 
-[node name="Visual" type="Polygon2D" parent="P5"]
+[node name="Visual" type="Polygon2D" parent="P5" index="0" unique_id=832709724]
 position = Vector2(156, 2)
 color = Color(0.45, 0.45, 0.5, 1)
 polygon = PackedVector2Array(-100, -15, 100, -15, 100, 15, -100, 15)
 
-[node name="Collision" type="CollisionShape2D" parent="P5"]
+[node name="Collision" type="CollisionShape2D" parent="P5" index="1" unique_id=32171497]
 position = Vector2(158, 1)
 shape = SubResource("plat_short")
 
-[node name="P6Top" type="StaticBody2D" parent="."]
+[node name="P6Top" type="StaticBody2D" parent="." index="10" unique_id=185335418]
 position = Vector2(1045, 341)
 
-[node name="Visual" type="Polygon2D" parent="P6Top"]
+[node name="Visual" type="Polygon2D" parent="P6Top" index="0" unique_id=2121461840]
 color = Color(0.5, 0.5, 0.55, 1)
 polygon = PackedVector2Array(-280, -15, 280, -15, 280, 15, -280, 15)
 
-[node name="Collision" type="CollisionShape2D" parent="P6Top"]
+[node name="Collision" type="CollisionShape2D" parent="P6Top" index="1" unique_id=920509483]
 shape = SubResource("plat_top_exit")
 
-[node name="Checkpoint" parent="." instance=ExtResource("2_cp")]
+[node name="Checkpoint" parent="." index="11" unique_id=1120717607 instance=ExtResource("2_cp")]
 position = Vector2(120, 624)
 
-[node name="Sign" parent="." instance=ExtResource("3_sign")]
+[node name="Sign" parent="." index="12" unique_id=267135198 instance=ExtResource("3_sign")]
 position = Vector2(280, 600)
 text = "按 LMB → 走幾步 → 再按 LMB → 按 RMB 看看會發生什麼"
+
+[node name="CrumblingPlatform" parent="." index="13" unique_id=1082095363 instance=ExtResource("4_cmb2w")]
+position = Vector2(744, 544)
+
+[node name="CrumblingPlatform2" parent="." index="14" unique_id=1732118246 instance=ExtResource("4_cmb2w")]
+position = Vector2(951, 545)
+
+[node name="CrumblingPlatform3" parent="." index="15" unique_id=761163624 instance=ExtResource("4_cmb2w")]
+position = Vector2(951, 475)

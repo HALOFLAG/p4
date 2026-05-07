@@ -30,6 +30,13 @@ const MAX_FALL_SPEED := 700.0     # 終端速度（不會掉得無限快）
 const COYOTE_TIME := 0.15        # 離地後 0.15 秒內仍可跳
 const JUMP_BUFFER := 0.15        # 落地前 0.15 秒按跳，落地立即跳
 
+# 移動平台繼承速度上限（M13）
+# 玩家踩到 AnimatableBody2D（如 TriggeredPlatform）跳起時、CharacterBody2D 預設繼承
+# 平台速度（platform_on_leave = ADD_VELOCITY）。若平台速度 >> MAX_SPEED 會「暴衝」感。
+# 這個上限只在「剛離地」那 1 frame clamp velocity.x、避免過度繼承；空中物理照常
+# 比 MAX_SPEED(190) 略高、保留「平台給點推力」的物理感、但不暴衝
+const MAX_INHERIT_SPEED := 220.0
+
 # === 內部狀態 ===
 var coyote_timer := 0.0
 var jump_buffer_timer := 0.0
@@ -182,7 +189,15 @@ func _apply_movement(delta: float) -> void:
 		velocity.y = JUMP_CUT_VELOCITY
 
 	# --- 7. 套用移動 + 處理碰撞 ---
+	var was_on_floor := is_on_floor()
 	move_and_slide()
+
+	# --- 8. 平台繼承速度 clamp（M13）---
+	# 偵測「剛離地」（跳起 / 走出平台邊緣）那一幀
+	# 把繼承自移動平台的水平速度 clamp 到 MAX_INHERIT_SPEED
+	# 之後空中受重力、AIR_DECEL、玩家方向鍵等正常物理影響
+	if was_on_floor and not is_on_floor():
+		velocity.x = clampf(velocity.x, -MAX_INHERIT_SPEED, MAX_INHERIT_SPEED)
 
 
 # === 預設：把這 tick 的輸入存進 RecordingManager ===
@@ -197,6 +212,16 @@ func _record_frame_if_needed() -> void:
 # Clone 會覆寫成低 6 dB（≈ -50% 振幅、避免一堆分身同時跳很吵）
 func _play_jump_sfx() -> void:
 	AudioManager.play_sfx("jump")
+
+
+# === 外部驅動的速度修改（給彈簧 / 推力機關用） ===
+# 由 Spring 等機關 body_entered 時呼叫
+# 重置 coyote/buffer 避免「彈起後立刻又能跳」造成不可預期行為
+# Clone 透過繼承自動有此方法
+func apply_bounce(vy: float) -> void:
+	velocity.y = vy
+	coyote_timer = 0.0
+	jump_buffer_timer = 0.0
 
 
 # === 凍結機制（M4 新增） ===

@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3 uid="uid://yppdd8iuu0k2"]
+[gd_scene format=3 uid="uid://yppdd8iuu0k2"]
 
 [ext_resource type="Script" uid="uid://p2cojjyxybo7" path="res://scripts/World.gd" id="1_world"]
 [ext_resource type="PackedScene" path="res://scenes/Player.tscn" id="2_player"]
@@ -6,46 +6,64 @@
 [ext_resource type="Script" uid="uid://cwhw0lp8wl8j5" path="res://scripts/CloneSpawner.gd" id="4_spawner"]
 [ext_resource type="AudioStream" uid="uid://bhdttxc2rbi6q" path="res://audio/bgm/title.mp3" id="5_bgm"]
 [ext_resource type="PackedScene" path="res://scenes/components/HazardZone.tscn" id="6_hz"]
-[ext_resource type="PackedScene" path="res://scenes/rooms/demo_room1.tscn" id="7_room1"]
-[ext_resource type="PackedScene" path="res://scenes/rooms/demo_room2.tscn" id="8_room2"]
+[ext_resource type="PackedScene" uid="uid://c82luje50304g" path="res://scenes/rooms/demo_room1.tscn" id="7_room1"]
+[ext_resource type="PackedScene" uid="uid://c5bhmx15c2ak7" path="res://scenes/rooms/demo_room2.tscn" id="8_room2"]
 [ext_resource type="PackedScene" path="res://scenes/rooms/demo_room3.tscn" id="9_room3"]
-[ext_resource type="PackedScene" path="res://scenes/rooms/demo_room4.tscn" id="10_room4"]
+[ext_resource type="PackedScene" uid="uid://citt0dns41n2n" path="res://scenes/rooms/demo_room4.tscn" id="10_room4"]
 [ext_resource type="PackedScene" path="res://scenes/rooms/demo_room6.tscn" id="11_room6"]
+[ext_resource type="PackedScene" path="res://scenes/components/Lever.tscn" id="12_nrtoj"]
+[ext_resource type="PackedScene" path="res://scenes/components/Door.tscn" id="13_i4b1j"]
+[ext_resource type="PackedScene" path="res://scenes/components/Spring.tscn" id="14_i4b1j"]
+[ext_resource type="PackedScene" path="res://scenes/Teleporter.tscn" id="15_c0d7e"]
 
-[node name="World" type="Node2D"]
+[node name="World" type="Node2D" unique_id=1085244845]
 script = ExtResource("1_world")
 
-[node name="Camera2D" type="Camera2D" parent="."]
+[node name="Camera2D" type="Camera2D" parent="." unique_id=1482134037]
 position = Vector2(640, 360)
 
-[node name="Player" parent="." instance=ExtResource("2_player")]
+[node name="Player" parent="." unique_id=2128674791 instance=ExtResource("2_player")]
 position = Vector2(150, 628)
 
-[node name="HUD" parent="." instance=ExtResource("3_hud")]
+[node name="HUD" parent="." unique_id=992872741 instance=ExtResource("3_hud")]
 
-[node name="CloneSpawner" type="Node" parent="."]
+[node name="CloneSpawner" type="Node" parent="." unique_id=1736918275]
 script = ExtResource("4_spawner")
 
-[node name="BGMPlayer" type="AudioStreamPlayer" parent="."]
+[node name="BGMPlayer" type="AudioStreamPlayer" parent="." unique_id=563621188]
 stream = ExtResource("5_bgm")
 autoplay = true
-bus = "Music"
 
-[node name="demo_room1" parent="." instance=ExtResource("7_room1")]
+[node name="demo_room1" parent="." unique_id=271686985 instance=ExtResource("7_room1")]
 
-[node name="demo_room2" parent="." instance=ExtResource("8_room2")]
+[node name="demo_room2" parent="." unique_id=1959028582 instance=ExtResource("8_room2")]
 position = Vector2(1280, -1)
 
-[node name="demo_room3" parent="." instance=ExtResource("9_room3")]
+[node name="demo_room3" parent="." unique_id=1406988062 instance=ExtResource("9_room3")]
 position = Vector2(2560, 0)
 
-[node name="demo_room4" parent="." instance=ExtResource("10_room4")]
+[node name="demo_room4" parent="." unique_id=2042851765 instance=ExtResource("10_room4")]
 position = Vector2(3840, 0)
 
-[node name="demo_room6" parent="." instance=ExtResource("11_room6")]
+[node name="demo_room6" parent="." unique_id=574300456 instance=ExtResource("11_room6")]
 position = Vector2(5120, 0)
 
-[node name="DeathBand" parent="." instance=ExtResource("6_hz")]
+[node name="DeathBand" parent="." unique_id=25658897 instance=ExtResource("6_hz")]
 position = Vector2(2560, 850)
 size = Vector2(10000, 200)
 visual_color = Color(0.85, 0.2, 0.25, 0)
+
+[node name="Lever" parent="." unique_id=727758466 instance=ExtResource("12_nrtoj")]
+position = Vector2(995, 299)
+size = Vector2(20, 20)
+
+[node name="Door" parent="." unique_id=1956637401 instance=ExtResource("13_i4b1j")]
+position = Vector2(1221, 124)
+
+[node name="Spring" parent="." unique_id=835530337 instance=ExtResource("14_i4b1j")]
+position = Vector2(85, 400)
+
+[node name="Teleporter" parent="." unique_id=79760962 instance=ExtResource("15_c0d7e")]
+position = Vector2(5028, 359)
+
+[connection signal="state_changed" from="Lever" to="Door" method="set_target"]
