@@ -185,7 +185,8 @@ func _change_state(new: State):
 
 ## 二、TileMap（地形系統）
 
-> 已在前次對話詳細解釋。摘要要點：
+> ⚠️ **2026-05-08 M15.1 決策**：選 (c) 不引入 TileMap、改強化現有元件化策略。
+> 原本 § 二 寫「建議混合策略」、是基於泛用論證；M15.1 盤點後發現瓶頸不在 TileMap 缺席、而是 Platform.tscn 元件未被充分使用、故改向。詳見 § 2.1。
 
 #### 🎯 運作目標
 用「畫圖」方式擺地形，取代手刻 StaticBody2D。
@@ -199,8 +200,76 @@ TileSet（圖塊資料庫，.tres）+ TileMapLayer（畫布節點）。Godot 4.3
 
 #### 💰 導入成本/時機
 - 成本：第一次 1~2 小時（配 TileSet + collision）；之後新房間極快
-- 時機：當你要新增 5+ 個房間時、先停下來配 TileSet
-- **建議混合策略**：TileMap 處理重複地形、`.tscn` 元件處理互動物件、StaticBody2D 處理異形（如 demo_room1 的 P2 五邊形）
+- 時機：M15.1 已決定**本 v1.0 不引入**；若 v2.0 自製關卡編輯器或購買 tile sprite 美術、再評估
+
+---
+
+### 2.1 M15.1 評估與決策（2026-05-08）
+
+#### 背景
+M15 階段需 lock 後續 6~10 關的地形實作策略。3 週工期、單人、無美術 sprite（全 Polygon2D 色塊）、元件化已成熟。前 2 天做評估、第 2 天結束 lock。
+
+#### 盤點現況
+
+| 觀察 | 細節 |
+|---|---|
+| Platform.tscn 元件成熟度 | `@tool` + `size`/`color` 即時預覽、矩形完全可控 |
+| 既有 demo room 元件使用率 | **低**——demo_room1 的 P1~P6、demo_room4 的 L1~L3/R1~R3 全是 inline StaticBody2D + Polygon2D + CollisionShape2D（3 節點/塊）、未使用 Platform.tscn |
+| 異形需求 | demo_room1 的 P2 為帶缺口五邊形、demo_room4 的 L4Btn/R4Btn 為加寬按鈕台 |
+| 重複地形密度 | 中等。每房間 6~12 個小平台、規格高度雷同（197×30、240×30、wall 600×40）|
+| 視覺風格 | 純 Polygon2D 色塊、無紋理、無 sprite |
+
+#### 三選項權衡
+
+| 維度 | (a) 全 TileMap | (b) 混合策略 | (c) 強化元件、不引入 TileMap |
+|---|---|---|---|
+| 學習成本 | 高（TileSet/TileMapLayer/物理層 1.5~2h）| 中（同 a 但只用核心功能）| 0（已會）|
+| 6~10 關工時 | 配 TileSet 後刷地形快、但前置投資吃掉前 2 關 | 互動物件保留元件、地形快、平衡 | 沿用元件 + 補 Wall.tscn/Floor.tscn 即可 |
+| 與 Recording deterministic 相容 | TileMap 物理是 StaticBody2D 同源、deterministic OK | 同 a | 完全一致（已驗證）|
+| 與既有元件整合 | TileMap 不能放互動物件、得分層 | 設計成本中（協調 z-index、collision layer）| 0 摩擦 |
+| 異形地形 | TileMap 處理不來、仍需 inline | 異形 inline 處理 | 異形 inline 處理（同現狀）|
+| 視覺風格一致性 | 需先做 TileSet 圖塊、不然 TileMap 反而醜 | 同 a | 完全一致（沿用 Polygon2D 色塊）|
+| 未來 M14b polish 風險 | 低（TileMap 換貼圖簡單）| 低 | 中（每塊地形自繪、polish 時要換 sprite 比較煩）|
+
+#### 推薦：選項 (c)
+
+**核心理由**：盤點顯示「地形配置慢」不是 TileMap 缺席造成、是 **Platform.tscn 元件沒被用起來**。demo_room1 的 P1~P6 改用 Platform.tscn 後、節點數從 18 降到 6、地形碎片化問題就大半消失。
+
+**為何不選 (a)/(b)**：
+- 視覺仍是色塊階段、TileSet 沒美術可放、用 TileMap 等於「為了 TileMap 而 TileMap」
+- 3 週工期、學新工具的投資回收期 > 剩餘關卡數、邊際效益不足
+- 互動物件（按鈕、門、傳送門）已是 `.tscn` 元件、TileMap 不能直接整合、(b) 反而讓地形與機關對齊變麻煩
+
+#### 後續 8 關實作模板
+
+1. **地形元件擴充清單**（M15.1 收尾、預估 30 分鐘）：
+   - `Floor.tscn`（@tool、size/color、預設 1280×40）
+   - `Wall.tscn`（@tool、size/color、預設 40×600）
+   - `Platform.tscn`（已存在、保持不變）
+   - 異形地形仍 inline（每關 1~2 個、用於設計重點）
+
+2. **每關地形配置 SOP**：
+   - Step 1：拖 Room.tscn（繼承）→ 設 area_color
+   - Step 2：拖 Floor.tscn / Wall.tscn 處理外框（4 個節點搞定）
+   - Step 3：拖 Platform.tscn × N 處理重複小平台（每塊 1 個節點）
+   - Step 4：異形地形 inline StaticBody2D（不超過 2 個/關）
+   - Step 5：拖互動元件（PressButton/Door/Exit/Teleporter…）
+   - Step 6：連 signal、設 LogicGate
+
+3. **產能預估**：每關地形配置 < 20 分鐘、滿足 3 週做完 6~10 關。
+
+#### Escape Hatch（重新評估條件）
+
+若 M15.2 大綱出現以下任一條件、回頭重評選項 (a)/(b)：
+- 單關地形重複塊數 > 30（目前最高 ~12）
+- 確定 M14b 會購買/委託 tile sprite 美術資源
+- 加入「自製關卡編輯器」需求（TileMap 在編輯器內畫圖體驗遠勝拖元件）
+
+#### 與既有系統相容性備註
+
+- **Recording 一致性**：選 (c) 完全沿用 StaticBody2D、與現有 `_physics_process` 60Hz tick 一致、無風險
+- **z-index / collision layer**：地形元件已固定為 layer 1、與機關元件 layer 配置不衝突
+- **未來換 sprite**：Polygon2D 換 Sprite2D 是節點層級替換、不影響 collision、與 (a) 換 TileSet 紋理同等簡單
 
 ---
 

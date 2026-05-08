@@ -98,8 +98,13 @@ func _on_player_on_lightpoint(lp) -> void:
 	# 已有傳送門提示就讓位、避免 context_hint 閃爍
 	if _hint_owner == "teleporter":
 		return
+	# 鍵名選擇依據：玩法鎖定清單 + project.godot input map
+	#   record action = LMB + R 兩鍵都綁、站光點上按任一鍵都進入「重錄該槽位」
+	#   只顯 LMB 是保守選擇：避免新手把 R 誤認為「重錄專屬鍵」
+	#   （R 在 RecordingProxy 上是「結束錄製」、語意不同、減少混淆）
+	#   Q 是 delete_slot action、站光點上才有效
 	var slot_index: int = lp.slot_index
-	context_hint.text = "第 %d 段過去的起點 — LMB/R 重做 / Q 抹去" % (slot_index + 1)
+	context_hint.text = "第 %d 段過去的起點 — LMB 重錄此槽位 / Q 抹去" % (slot_index + 1)
 	context_hint.visible = true
 	_hint_owner = "lightpoint"
 

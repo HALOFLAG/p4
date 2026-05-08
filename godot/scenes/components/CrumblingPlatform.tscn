@@ -1,4 +1,4 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://scripts/CrumblingPlatform.gd" id="1_crumble"]
 
@@ -7,6 +7,46 @@ size = Vector2(200, 30)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_crumble_detect"]
 size = Vector2(200, 40)
+
+[sub_resource type="Animation" id="Animation_RESET"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Visual:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Color(1, 1, 1, 1)]
+}
+
+[sub_resource type="Animation" id="Animation_solid"]
+length = 0.001
+
+[sub_resource type="Animation" id="Animation_warning"]
+length = 0.001
+
+[sub_resource type="Animation" id="Animation_collapse"]
+length = 0.001
+
+[sub_resource type="Animation" id="Animation_collapsed"]
+length = 0.001
+
+[sub_resource type="Animation" id="Animation_restore"]
+length = 0.001
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_default"]
+_data = {
+"RESET": SubResource("Animation_RESET"),
+"collapse": SubResource("Animation_collapse"),
+"collapsed": SubResource("Animation_collapsed"),
+"restore": SubResource("Animation_restore"),
+"solid": SubResource("Animation_solid"),
+"warning": SubResource("Animation_warning")
+}
 
 [node name="CrumblingPlatform" type="StaticBody2D"]
 script = ExtResource("1_crumble")
@@ -24,3 +64,9 @@ collision_mask = 3
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="DetectArea"]
 shape = SubResource("RectangleShape2D_crumble_detect")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+callback_mode_process = 0
+libraries = {
+"": SubResource("AnimationLibrary_default")
+}

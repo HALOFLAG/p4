@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" path="res://scenes/components/PressButton.tscn" id="4_btn"]
 [ext_resource type="PackedScene" path="res://scenes/components/Door.tscn" id="5_door"]
 [ext_resource type="Script" uid="uid://1mobhmsuhrvn" path="res://scripts/LogicGate.gd" id="6_gate"]
+[ext_resource type="PackedScene" path="res://scenes/components/Wall.tscn" id="7_0n5dc"]
 
 [sub_resource type="RectangleShape2D" id="floor_full"]
 size = Vector2(1280, 40)
@@ -168,6 +169,11 @@ position = Vector2(32, 152)
 script = ExtResource("6_gate")
 op = 2
 inputs = Array[NodePath]([NodePath("../ButtonRight")])
+
+[node name="Wall" parent="." index="23" unique_id=907763661 instance=ExtResource("7_0n5dc")]
+position = Vector2(450, 464)
+size = Vector2(40, 80)
+color = Color(0.43169102, 0.04427199, 0.71678793, 1)
 
 [connection signal="output_changed" from="LogicGate" to="Door" method="set_target"]
 [connection signal="output_changed" from="LogicGate2" to="Door2" method="set_target"]

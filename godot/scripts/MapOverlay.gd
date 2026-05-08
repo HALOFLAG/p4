@@ -21,7 +21,9 @@ const LP_LABEL_FONT_SIZE := 12
 const COLOR_BG := Color(0.04, 0.05, 0.08, 0.95)
 const COLOR_PLAYER := Color(1, 0.55, 0.7)
 const COLOR_TELEPORTER := Color(0.6, 0.85, 1.0)
+const COLOR_TELEPORTER_UNDISCOVERED := Color(0.35, 0.38, 0.45)  # 未啟用——灰、不可點
 const COLOR_MARKER_BORDER := Color(1, 1, 1)
+const COLOR_MARKER_BORDER_DIM := Color(0.55, 0.6, 0.7)   # 未啟用傳送門邊框
 const COLOR_TELEPORTER_HOVER := Color(1, 0.85, 0.3)   # 金色——hover 中
 const COLOR_TELEPORTER_SOURCE := Color(0.5, 1.0, 0.5) # 綠色——目前所在傳送門
 const COLOR_LIGHTPOINT := Color(0.6, 0.85, 1.0)       # 與 LightPoint BRIGHT_COLOR 一致
@@ -109,6 +111,8 @@ func _process(_delta: float) -> void:
 
 
 # 用比 Marker 大一點的 rect 做 hit test、提升點擊容易度
+# 注意：仍會回傳未啟用 / source 傳送門、由呼叫端決定是否要 hover label / 點擊
+# 這樣 hover 未啟用時可顯「未啟用」提示、教育玩家「要走過去才能用」
 func _hit_test_teleporter(screen_pos: Vector2):
 	for tp in get_tree().get_nodes_in_group("teleporter"):
 		if not is_instance_valid(tp):
@@ -130,12 +134,22 @@ func _update_hover_label() -> void:
 		name_str = _hovered_teleporter.get_label()
 	if _hovered_teleporter == _source_teleporter:
 		label_label.text = "%s（目前位置）" % name_str
+	elif not _is_tp_discovered(_hovered_teleporter):
+		# 未啟用：提示玩家「先走過去」（混合方案 / 篝火模式）
+		label_label.text = "%s（未啟用 — 親身抵達後解鎖）" % name_str
 	else:
 		label_label.text = name_str
 	# 跟隨滑鼠右下、不擋到 hover marker
 	var mouse: Vector2 = canvas.get_local_mouse_position()
 	label_label.position = mouse + Vector2(16, 8)
 	label_label.visible = true
+
+
+# 統一查詢、避免散落多處（GameStats 是來源真相、Teleporter.is_discovered 為便利包裝）
+func _is_tp_discovered(tp) -> bool:
+	if tp == null or not is_instance_valid(tp):
+		return false
+	return GameStats.is_teleporter_discovered(tp)
 
 
 func _draw_canvas() -> void:
@@ -175,20 +189,23 @@ func _draw_canvas() -> void:
 			canvas.draw_string(font, text_pos, num_str, HORIZONTAL_ALIGNMENT_LEFT, -1, LP_LABEL_FONT_SIZE, Color.WHITE)
 
 	# 傳送門標記
-	# 顏色優先序：source(綠) > hover(金) > 預設(青藍)
+	# 顏色優先序：source(綠) > hover(金、僅已啟用會亮金) > 已啟用(青藍) > 未啟用(灰)
+	# 未啟用 hover 仍顯 label（教育玩家「要走過去」）、但點擊由 _input 過濾掉
 	for tp in get_tree().get_nodes_in_group("teleporter"):
 		if not is_instance_valid(tp):
 			continue
 		var center: Vector2 = _world_to_map(tp.global_position)
 		var rect := Rect2(center - TELEPORTER_MARKER_SIZE * 0.5, TELEPORTER_MARKER_SIZE)
-		var fill: Color = COLOR_TELEPORTER
-		var border: Color = COLOR_MARKER_BORDER
+		var discovered: bool = _is_tp_discovered(tp)
+		var fill: Color = COLOR_TELEPORTER if discovered else COLOR_TELEPORTER_UNDISCOVERED
+		var border: Color = COLOR_MARKER_BORDER if discovered else COLOR_MARKER_BORDER_DIM
 		var border_w: float = MARKER_BORDER_WIDTH
 		if tp == _source_teleporter:
 			fill = COLOR_TELEPORTER_SOURCE
 			border = COLOR_TELEPORTER_SOURCE
 			border_w = MARKER_BORDER_WIDTH * 1.5
-		elif _selection_mode and tp == _hovered_teleporter:
+		elif _selection_mode and tp == _hovered_teleporter and discovered:
+			# hover 金色僅給「可點選」對象（已啟用且非 source）
 			fill = COLOR_TELEPORTER_HOVER
 			border = COLOR_TELEPORTER_HOVER
 			border_w = MARKER_BORDER_WIDTH * 1.5
@@ -217,8 +234,10 @@ func _input(event: InputEvent) -> void:
 	if _selection_mode and event is InputEventMouseButton:
 		if event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 			var clicked = _hit_test_teleporter(event.position)
-			# 點到非 source 的傳送門才視為「選定」；source 或空白點擊忽略（不關閉）
-			if clicked != null and clicked != _source_teleporter:
+			# 過濾：source / 空白點擊 / 未啟用 都忽略（不關閉地圖、玩家可繼續挑）
+			if clicked != null \
+					and clicked != _source_teleporter \
+					and _is_tp_discovered(clicked):
 				_close(clicked)
 				get_viewport().set_input_as_handled()
 
